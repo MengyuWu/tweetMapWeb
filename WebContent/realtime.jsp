@@ -116,6 +116,7 @@
       <button onclick="changeGradient()">Change gradient</button>
       <button onclick="changeRadius()">Change radius</button>
       <button onclick="changeOpacity()">Change opacity</button>
+      <div> current tweets:<span id="Counter"><%=locations.size()%></span></div> 
     </div>
    <div id="map"></div>
    
