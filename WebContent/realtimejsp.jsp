@@ -74,7 +74,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>main page</title>
+    <title>real time tweet map</title>
     <style>
       html, body {
         height: 100%;
@@ -121,23 +121,21 @@
     <script>
 
 var map, heatmap, pointsmap;
-var markers=[];
-var circles=[];
 var flag="heat";
 
 function initMap() {
 
   var mapProp = {
 		  center:{lat: 37.775, lng: -122.434},
-		  zoom:2,
+		  zoom:13,
 		  mapTypeId:google.maps.MapTypeId.ROADMAP
 		  };
 
-  //pointsmap=new google.maps.Map(document.getElementById('map'), mapProp);
+  pointsmap=new google.maps.Map(document.getElementById('map'), mapProp);
   map = new google.maps.Map(document.getElementById('map'), mapProp);
  
   
-  /* var positions=getPoints();
+  var positions=getPoints();
   for (i in positions){
   	
   	var latLng=positions[i];
@@ -151,7 +149,7 @@ function initMap() {
   		  fillOpacity:0.4
   		  });
   	point.setMap(pointsmap);
-  } */
+  }
 
   heatmap = new google.maps.visualization.HeatmapLayer({
     data: getPoints(),
@@ -162,51 +160,49 @@ function initMap() {
 function getPointsMap(){
 	flag="points";
 	
-/* 	var mapProp = {
+	var mapProp = {
 			  center:{lat: 37.775, lng: -122.434},
 			  zoom:13,
 			  mapTypeId:google.maps.MapTypeId.ROADMAP
 			  };
 
 	  
-	map = new google.maps.Map(document.getElementById('map'), mapProp); */
+	map = new google.maps.Map(document.getElementById('map'), mapProp);
 	var positions=getPoints();
 	  for (i in positions){
 	  	
 	  	var latLng=positions[i];
 	    var point = new google.maps.Circle({
 	  		  center: latLng,
-	  		  radius:20000,
+	  		  radius:200,
 	  		  strokeColor:"#0000FF",
 	  		  strokeOpacity:0.8,
 	  		  strokeWeight:2,
 	  		  fillColor:"#0000FF",
-	  		  fillOpacity:0.9
+	  		  fillOpacity:0.4
 	  		  });
 	  	point.setMap(map); 
-	  	circles.push(point);
 	  	
 	  	//marker:
-	  	/* var marker = new google.maps.Marker({
+	  	var marker = new google.maps.Marker({
 	  	    position:{lat: latLng.lat(), lng:latLng.lng()},
 	  	    map:map,
 	  	    title: 'Hello World!'
 	  	  }); 
-	  	markers.push(marker); */
 	  }
 }
 
 function getHeatMap(){
 	flag="heat";
 	
-	/* var mapProp = {
+	var mapProp = {
 			  center:{lat: 37.775, lng: -122.434},
 			  zoom:13,
 			  mapTypeId:google.maps.MapTypeId.ROADMAP
 			  };
 
 	  
-	map = new google.maps.Map(document.getElementById('map'), mapProp); */
+	map = new google.maps.Map(document.getElementById('map'), mapProp);
 	heatmap = new google.maps.visualization.HeatmapLayer({
 	    data: getPoints(),
 	    map: map
@@ -217,29 +213,27 @@ function getHeatMap(){
 function toggleHeatmap() {
  // heatmap.setMap(heatmap.getMap() ? null : map);
  if(flag=="heat"){
-	 heatmap.setMap(null);
 	 getPointsMap();
  }else if(flag="points"){
-	 DeletePoints();
 	 getHeatMap();
  }
  
  
 }
 
-function DeletePoints() {
-    //Loop through all the markers and remove
-    for (var i = 0; i < markers.length; i++) {
-        markers[i].setMap(null);
-    }
-    
-    for (var i = 0; i < circles.length; i++) {
-    	circles[i].setMap(null);
-    }
-    
-    markers = [];
-    circles = [];
-}
+window.setInterval(function(){
+	if(flag=="heat"){
+		heatmap = new google.maps.visualization.HeatmapLayer({
+		    data: getPoints(),
+		    map: map
+		 });
+		heatmap.setMap(map);
+	}else if(flag=="points"){
+		
+	}
+	
+	
+}, 5000);
 
 function changeGradient() {
   var gradient = [
