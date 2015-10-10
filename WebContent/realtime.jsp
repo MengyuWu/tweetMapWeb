@@ -156,7 +156,7 @@ function initMap() {
   } */
 
   heatmap = new google.maps.visualization.HeatmapLayer({
-    data: getPoints(),
+    data: getPoints(<%=locations%>),
     map: map
   });
 }
@@ -172,7 +172,7 @@ function getPointsMap(){
 
 	  
 	map = new google.maps.Map(document.getElementById('map'), mapProp); */
-	var positions=getPoints();
+	var positions=getPoints(<%=locations%>);
 	  for (i in positions){
 	  	
 	  	var latLng=positions[i];
@@ -210,7 +210,7 @@ function getHeatMap(){
 	  
 	map = new google.maps.Map(document.getElementById('map'), mapProp); */
 	heatmap = new google.maps.visualization.HeatmapLayer({
-	    data: getPoints(),
+	    data: getPoints(<%=locations%>),
 	    map: map
 	  });
 }
@@ -218,17 +218,33 @@ function getHeatMap(){
 window.setInterval(function(){
 	//alert("real time update");
 	 $.getJSON('MainServlet', function(data){
-		document.write(data);
+		 var locations=[];
+		 $.each(data, function(key, val) {
+			    
+				var jsonval = JSON.stringify(val);
+				// get rid of [ ]
+				var val=jsonval.substr(1, jsonval.length-2); 
+				var loc=val.split(',');
+				
+				var point=[loc[0],loc[1]];
+				locations.push(point);
+
+		  	  });
+		// document.write(locations);
+		 
+			if(flag=="heat"){
+				//TODO: update points in heatmap
+				 heatmap.setMap(null);
+				 getHeatMap(locations);			 
+			}else if(flag=="points"){
+				//TODO: update points in heatmap
+				DeletePoints();
+				getPointsMap(locations);
+				
+			}
+		 
 	}); 
-	if(flag=="heat"){
-		//TODO: update points in heatmap
-		 heatmap.setMap(null);
-		 getPointsMap();
-	}else if(flag=="points"){
-		//TODO: update points in heatmap
-		DeletePoints();
-		getHeatMap();
-	}
+
 	
 	
 	
@@ -304,6 +320,22 @@ function getPoints() {
 	return points;
 
 }
+
+function getPoints(locationDatas) {
+	
+	var geoLocations=locationDatas; // assign location list to javascript;
+	var points=[];
+	for (i in geoLocations){
+		var point=geoLocations[i];
+		var lat=point[0];
+		var lng=point[1];
+		points.push(new google.maps.LatLng(lat, lng));
+	} 
+	
+	return points;
+
+}
+
 
     </script>
     <script async defer
