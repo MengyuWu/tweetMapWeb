@@ -217,8 +217,8 @@ function getHeatMap(){
 
 window.setInterval(function(){
 	//alert("real time update");
-	 $.get('MainServlet', function(data){
-		alert(data);
+	 $.getJSON('MainServlet', function(data){
+		document.write(data);
 	}); 
 	if(flag=="heat"){
 		//TODO: update points in heatmap
