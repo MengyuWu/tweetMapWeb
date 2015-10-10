@@ -118,7 +118,9 @@
       <button onclick="changeOpacity()">Change opacity</button>
     </div>
    <div id="map"></div>
-    <script>
+   
+   <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+   <script>
 
 var map, heatmap, pointsmap;
 var markers=[];
@@ -215,6 +217,9 @@ function getHeatMap(){
 
 window.setInterval(function(){
 	//alert("real time update");
+	 $.get('MainServlet', function(data){
+		alert(data);
+	}); 
 	if(flag=="heat"){
 		//TODO: update points in heatmap
 		 heatmap.setMap(null);
