@@ -183,13 +183,12 @@ function getPointsMap(){
 	  		  });
 	  	point.setMap(map); 
 	  	
-	  /* 	document.wrtie(latLng);
 	  	//marker:
 	  	var marker = new google.maps.Marker({
-	  	    position:LatLng,
+	  	    position:{lat: latLng.lat(), lng:latLng.lng()},
 	  	    map:map,
 	  	    title: 'Hello World!'
-	  	  }); */
+	  	  }); 
 	  }
 }
 
