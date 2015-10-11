@@ -116,8 +116,9 @@
       <button onclick="changeGradient()">Change gradient</button>
       <button onclick="changeRadius()">Change radius</button>
       <button onclick="changeOpacity()">Change opacity</button>
-      <div> current tweets:<span id="Counter"><%=locations.size()%></span></div> 
+      <div> Tweet Num:<span id="Counter"><%=locations.size()%></span></div>
     </div>
+   
    <div id="map"></div>
    
    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
@@ -127,6 +128,7 @@ var map, heatmap, pointsmap;
 var markers=[];
 var circles=[];
 var flag="heat";
+
 
 function initMap() {
 
@@ -232,6 +234,8 @@ window.setInterval(function(){
 
 		  	  });
 		// document.write(locations);
+		 document.getElementById("Counter").innerHTML=locations.length;
+		
 		 
 			if(flag=="heat"){
 				//TODO: update points in heatmap
