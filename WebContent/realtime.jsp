@@ -83,6 +83,14 @@
       }
       #map {
         height: 100%;
+        width: 80%;
+      }
+      .side-bar {
+          position: fixed;
+          right: 0;
+          top: 0;
+          width: 20%;
+          background: #fff;
       }
 #floating-panel {
   position: absolute;
@@ -118,66 +126,47 @@
       <button onclick="changeOpacity()">Change opacity</button>
       <div> Tweet Num:<span id="Counter"><%=locations.size()%></span></div>
     </div>
-   
+
    <div id="map"></div>
-   
+   <div class="side-bar"></div>
+
    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
    <script>
 
 var map, heatmap, pointsmap;
-var markers=[];
 var circles=[];
 var flag="heat";
 
-
 function initMap() {
-
   var mapProp = {
 		  center:{lat: 37.775, lng: -122.434},
 		  zoom:2,
 		  mapTypeId:google.maps.MapTypeId.ROADMAP
-		  };
-
-  //pointsmap=new google.maps.Map(document.getElementById('map'), mapProp);
+  };
   map = new google.maps.Map(document.getElementById('map'), mapProp);
- 
-  
-  /* var positions=getPoints();
-  for (i in positions){
-  	
-  	var latLng=positions[i];
-  	var point = new google.maps.Circle({
-  		  center: latLng,
-  		  radius:200,
-  		  strokeColor:"#0000FF",
-  		  strokeOpacity:0.8,
-  		  strokeWeight:2,
-  		  fillColor:"#0000FF",
-  		  fillOpacity:0.4
-  		  });
-  	point.setMap(pointsmap);
-  } */
 
-  heatmap = new google.maps.visualization.HeatmapLayer({
-    data: getPoints(<%=locations%>),
-    map: map
+  google.maps.event.addListenerOnce(map, 'idle', function(){
+      requestData();
+  // document.getElementById('ajax_loading_icon').style.display = "none";
+  // document.getElementById('map_canvas').style.visibility = "visible";
   });
+  // google.maps.event.addDomListener(window, 'load', requestData);
+  // requestData();
 }
 
-function getPointsMap(){
+function getPointsMap(data){
 	flag="points";
-	
+
 /* 	var mapProp = {
 			  center:{lat: 37.775, lng: -122.434},
 			  zoom:13,
 			  mapTypeId:google.maps.MapTypeId.ROADMAP
 			  };
 
-	  
+
 	map = new google.maps.Map(document.getElementById('map'), mapProp); */
-	var positions=getPoints(<%=locations%>);
+	var positions=getPoints(data);
 	  for (i in positions){
-	  	
 	  	var latLng=positions[i];
 	    var point = new google.maps.Circle({
 	  		  center: latLng,
@@ -188,99 +177,44 @@ function getPointsMap(){
 	  		  fillColor:"#0000FF",
 	  		  fillOpacity:0.9
 	  		  });
-	  	point.setMap(map); 
+	  	point.setMap(map);
 	  	circles.push(point);
-	  	
+
 	  	//marker:
 	  	/* var marker = new google.maps.Marker({
 	  	    position:{lat: latLng.lat(), lng:latLng.lng()},
 	  	    map:map,
 	  	    title: 'Hello World!'
-	  	  }); 
+	  	  });
 	  	markers.push(marker); */
 	  }
 }
 
-function getHeatMap(){
+function getHeatMap(data){
 	flag="heat";
-	
-	/* var mapProp = {
-			  center:{lat: 37.775, lng: -122.434},
-			  zoom:13,
-			  mapTypeId:google.maps.MapTypeId.ROADMAP
-			  };
-
-	  
-	map = new google.maps.Map(document.getElementById('map'), mapProp); */
-	heatmap = new google.maps.visualization.HeatmapLayer({
-	    data: getPoints(<%=locations%>),
-	    map: map
+  var points = getPoints(data);
+    heatmap = new google.maps.visualization.HeatmapLayer({
+	     data: points,
+	      map: map
 	  });
 }
 
-window.setInterval(function(){
-	//alert("real time update");
-	 $.getJSON('MainServlet', function(data){
-		 var locations=[];
-		 $.each(data, function(key, val) {
-			    
-				var jsonval = JSON.stringify(val);
-				// get rid of [ ]
-				var val=jsonval.substr(1, jsonval.length-2); 
-				var loc=val.split(',');
-				
-				var point=[loc[0],loc[1]];
-				locations.push(point);
-
-		  	  });
-		// document.write(locations);
-		 document.getElementById("Counter").innerHTML=locations.length;
-		
-		 
-			if(flag=="heat"){
-				//TODO: update points in heatmap
-				 heatmap.setMap(null);
-				 getHeatMap(locations);			 
-			}else if(flag=="points"){
-				//TODO: update points in heatmap
-				DeletePoints();
-				getPointsMap(locations);
-				
-			}
-		 
-	}); 
-
-	
-	
-	
-}, 3000);
-
 function toggleHeatmap() {
- // heatmap.setMap(heatmap.getMap() ? null : map);
- if(flag=="heat"){
-	 heatmap.setMap(null);
-	 getPointsMap();
- }else if(flag="points"){
-	 DeletePoints();
-	 getHeatMap();
- }
- 
- 
-}
+      heatmap.setMap(heatmap.getMap() ? null : map);
+      if (!heatmap.map) {
+          DeletePoints();
+          getPointsMap();
+      }
+};
 
 function DeletePoints() {
     //Loop through all the markers and remove
-    for (var i = 0; i < markers.length; i++) {
-        markers[i].setMap(null);
-    }
-    
     for (var i = 0; i < circles.length; i++) {
     	circles[i].setMap(null);
     }
-    
-    markers = [];
+
     circles = [];
-}
+};
 
 function changeGradient() {
   var gradient = [
@@ -310,37 +244,51 @@ function changeOpacity() {
   heatmap.set('opacity', heatmap.get('opacity') ? null : 0.2);
 }
 
-// Heatmap data: 500 Points
-function getPoints() {
-	
-	var geoLocations=<%=locations%>; // assign location list to javascript;
-	var points=[];
-	for (i in geoLocations){
-		var point=geoLocations[i];
-		var lat=point[0];
-		var lng=point[1];
-		points.push(new google.maps.LatLng(lat, lng));
-	} 
-	
-	return points;
+function getPoints(data) {
+  return data.map(function(tweet) {
+      return new google.maps.LatLng(
+          tweet['lat'],
+          tweet['lng']
+      );
+  });
+};
 
-}
+function requestData() {
+  window.setInterval(function() {
+  	//alert("real time update");
+    $.getJSON('MainServlet', function(data) {
+      updateCounter(data);
+       if(flag=="heat") {
+         //TODO: update points in heatmap
+          if (heatmap && typeof heatmap.setMap === 'function') {
+            heatmap.setMap(null);
+          }
+          getHeatMap(data);
+       } else if(flag=="points") {
+         //TODO: update points in heatmap
+         DeletePoints();
+         getPointsMap(data);
+       }
 
-function getPoints(locationDatas) {
-	
-	var geoLocations=locationDatas; // assign location list to javascript;
-	var points=[];
-	for (i in geoLocations){
-		var point=geoLocations[i];
-		var lat=point[0];
-		var lng=point[1];
-		points.push(new google.maps.LatLng(lat, lng));
-	} 
-	
-	return points;
+       populateSideBar(data);
+   });
 
-}
+  }, 3000);
+};
 
+function updateCounter(data) {
+  document.getElementById("Counter").innerHTML=data.length;
+};
+
+// Sidebar
+function populateSideBar(data) {
+  $('.side-bar').empty();
+  for (var i=0; i<=10; i++) {
+      $('.side-bar').append(
+        '<div>' + data[i]['content'] + '</div><hr>'
+      );
+  }
+};
 
     </script>
     <script async defer

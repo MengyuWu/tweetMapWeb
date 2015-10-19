@@ -1,6 +1,7 @@
 import com.amazonaws.services.dynamodbv2.*;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.google.gson.Gson;
+import com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable;
 
 import static tweetBasic.AWSResourceSetup.*;
 
@@ -30,7 +31,7 @@ import twitter4j.conf.ConfigurationBuilder;
 public class MainServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static ConfigurationBuilder cb = new ConfigurationBuilder();
-	
+
 	static{
 		cb.setDebugEnabled(true)
 	       .setOAuthConsumerKey("ZuBFtIjHubaHmaomVCN6HNRI5")
@@ -38,48 +39,48 @@ public class MainServlet extends HttpServlet {
 	       .setOAuthAccessToken("3095412628-4kLyHeZWV3p4Swmqx0d2lGSfJbtNqPbl0VPuMta")
 	       .setOAuthAccessTokenSecret("bKdTWWUVrtg1WtTog65t2XscxdvNbHszxDQLHBpZkutIG");
 	}
-     
-     
+
+
     private static TwitterStream twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
-       
+
     /**
      * @see HttpServlet#HttpServlet()
      */
     public MainServlet() {
         super();
         // TODO Auto-generated constructor stub
-       
+
        StatusListener listener = new StatusListener() {
            @Override
            public void onStatus(Status status) {
 //               System.out.println("@" + status.getUser().getScreenName() + " - " + status.getText());
 //               System.out.println(" user location:"+status.getUser().getLocation());
 //               System.out.println(" Geo location:"+status.getGeoLocation());
-               
-               if(status.getGeoLocation()!=null){
+
+               if(status.getGeoLocation() != null){
                   System.out.println("Has Geo location:"+status.getGeoLocation());
-               	long id=status.getId();
-                   String strId=String.valueOf(id);
-                   String username=status.getUser().getScreenName();
-                   String content=status.getText();
-                   String userLocation=status.getUser().getLocation();
-                   double geoLat=0;
-                   double geoLng=0;
-                   Date createdAt=status.getCreatedAt();
-                   
-                   if(status.getGeoLocation()!=null){
-                   	geoLat=status.getGeoLocation().getLatitude();
-                   	geoLng=status.getGeoLocation().getLongitude();
+               	long id = status.getId();
+                   String strId = String.valueOf(id);
+                   String username = status.getUser().getScreenName();
+                   String content = status.getText();
+                   String userLocation = status.getUser().getLocation();
+                   double geoLat = 0;
+                   double geoLng = 0;
+                   Date createdAt = status.getCreatedAt();
+
+                   if(status.getGeoLocation() != null){
+                   	geoLat = status.getGeoLocation().getLatitude();
+                   	geoLng = status.getGeoLocation().getLongitude();
                    }
-                   
-                   Tweet t=new Tweet(strId, username,content, userLocation, geoLat,geoLng, createdAt);
+
+                   Tweet t = new Tweet(strId, username,content, userLocation, geoLat,geoLng, createdAt);
                    t.saveTweetToDynamoDB();
                    System.out.println("save tweet");
                }
-               
-               
+
+
                //System.exit(0);
-               
+
            }
 
            @Override
@@ -121,31 +122,37 @@ public class MainServlet extends HttpServlet {
 		 Condition condition = new Condition()
 		    .withComparisonOperator(ComparisonOperator.NE.toString())
 		    .withAttributeValueList(new AttributeValue().withN("0"));
-		Condition condition2=new Condition()
+		Condition condition2 = new Condition()
 		 	.withComparisonOperator(ComparisonOperator.NE.toString())
 		    .withAttributeValueList(new AttributeValue().withN("0"));
 		scanFilter.put("geoLat", condition);
-		scanFilter.put("geoLng",condition2); 
-		String tableName=DYNAMODB_TABLE_NAME;
+		scanFilter.put("geoLng",condition2);
+		String tableName = DYNAMODB_TABLE_NAME;
 		ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
 		ScanResult scanResult = DYNAMODB.scan(scanRequest);
-		
-		int size=scanResult.getItems().size();
-		List<List<Double>> locations=new ArrayList<List<Double>>();
-		for(int i=0; i<size; i++){
-			String latstr=scanResult.getItems().get(i).get("geoLat").getN();
-			String lngstr=scanResult.getItems().get(i).get("geoLng").getN();
-			double lat=Double.parseDouble(latstr);
-			double lng=Double.parseDouble(lngstr);
-			ArrayList<Double> pair=new ArrayList<Double>();
-			pair.add(lat);
-			pair.add(lng);
-			locations.add(pair);
+
+		int size = scanResult.getItems().size();
+		List<HashMap<String,String>> tweets = new ArrayList<HashMap<String,String>>();
+		for(int i = 0; i<size; i++){
+			String latstr = scanResult.getItems().get(i).get("geoLat").getN();
+			String lngstr = scanResult.getItems().get(i).get("geoLng").getN();
+			String content = scanResult.getItems().get(i).get("content").getS();
+			String username = scanResult.getItems().get(i).get("username").getS();
+//			double lat = Double.parseDouble(latstr);
+//			double lng = Double.parseDouble(lngstr);
+			
+			HashMap<String,String> tweet = new HashMap<String,String>();
+			tweet.put("lat", latstr);
+			tweet.put("lng", lngstr);
+			tweet.put("content", content);
+			tweet.put("username", username);
+
+			tweets.add(tweet);
 		}
-		
+
 		//convert object to JSON format
-		System.out.println("size: "+locations.size());
-		String json = new Gson().toJson(locations);
+		System.out.println("size: "+tweets.size());
+		String json = new Gson().toJson(tweets);
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
 		response.getWriter().write(json);
