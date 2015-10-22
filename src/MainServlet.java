@@ -49,69 +49,69 @@ public class MainServlet extends HttpServlet {
      * @see HttpServlet#HttpServlet()
      */
     public MainServlet() {
-        super();
-        // TODO Auto-generated constructor stub
-
-       StatusListener listener = new StatusListener() {
-           @Override
-           public void onStatus(Status status) {
-//               System.out.println("@" + status.getUser().getScreenName() + " - " + status.getText());
-//               System.out.println(" user location:"+status.getUser().getLocation());
-//               System.out.println(" Geo location:"+status.getGeoLocation());
-
-               if(status.getGeoLocation() != null){
-                  System.out.println("Has Geo location:"+status.getGeoLocation());
-               	long id = status.getId();
-                   String strId = String.valueOf(id);
-                   String username = status.getUser().getScreenName();
-                   String content = status.getText();
-                   String userLocation = status.getUser().getLocation();
-                   double geoLat = 0;
-                   double geoLng = 0;
-                   Date createdAt = status.getCreatedAt();
-
-                   if(status.getGeoLocation() != null){
-                   	geoLat = status.getGeoLocation().getLatitude();
-                   	geoLng = status.getGeoLocation().getLongitude();
-                   }
-
-                   Tweet t = new Tweet(strId, username,content, userLocation, geoLat,geoLng, createdAt);
-                   t.saveTweetToDynamoDB();
-                   System.out.println("save tweet");
-               }
-
-
-               //System.exit(0);
-
-           }
-
-           @Override
-           public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
-              // System.out.println("Got a status deletion notice id:" + statusDeletionNotice.getStatusId());
-           }
-
-           @Override
-           public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-               System.out.println("Got track limitation notice:" + numberOfLimitedStatuses);
-           }
-
-           @Override
-           public void onScrubGeo(long userId, long upToStatusId) {
-               System.out.println("Got scrub_geo event userId:" + userId + " upToStatusId:" + upToStatusId);
-           }
-
-           @Override
-           public void onStallWarning(StallWarning warning) {
-               System.out.println("Got stall warning:" + warning);
-           }
-
-           @Override
-           public void onException(Exception ex) {
-               ex.printStackTrace();
-           }
-       };
-       twitterStream.addListener(listener);
-       twitterStream.sample();
+//        super();
+//        // TODO Auto-generated constructor stub
+//
+//       StatusListener listener = new StatusListener() {
+//           @Override
+//           public void onStatus(Status status) {
+////               System.out.println("@" + status.getUser().getScreenName() + " - " + status.getText());
+////               System.out.println(" user location:"+status.getUser().getLocation());
+////               System.out.println(" Geo location:"+status.getGeoLocation());
+//
+//               if(status.getGeoLocation() != null){
+//                  System.out.println("Has Geo location:"+status.getGeoLocation());
+//               	long id = status.getId();
+//                   String strId = String.valueOf(id);
+//                   String username = status.getUser().getScreenName();
+//                   String content = status.getText();
+//                   String userLocation = status.getUser().getLocation();
+//                   double geoLat = 0;
+//                   double geoLng = 0;
+//                   Date createdAt = status.getCreatedAt();
+//
+//                   if(status.getGeoLocation() != null){
+//                   	geoLat = status.getGeoLocation().getLatitude();
+//                   	geoLng = status.getGeoLocation().getLongitude();
+//                   }
+//
+//                   Tweet t = new Tweet(strId, username,content, userLocation, geoLat,geoLng, createdAt);
+//                   t.saveTweetToDynamoDB();
+//                   System.out.println("save tweet");
+//               }
+//
+//
+//               //System.exit(0);
+//
+//           }
+//
+//           @Override
+//           public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
+//              // System.out.println("Got a status deletion notice id:" + statusDeletionNotice.getStatusId());
+//           }
+//
+//           @Override
+//           public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
+//               System.out.println("Got track limitation notice:" + numberOfLimitedStatuses);
+//           }
+//
+//           @Override
+//           public void onScrubGeo(long userId, long upToStatusId) {
+//               System.out.println("Got scrub_geo event userId:" + userId + " upToStatusId:" + upToStatusId);
+//           }
+//
+//           @Override
+//           public void onStallWarning(StallWarning warning) {
+//               System.out.println("Got stall warning:" + warning);
+//           }
+//
+//           @Override
+//           public void onException(Exception ex) {
+//               ex.printStackTrace();
+//           }
+//       };
+//       twitterStream.addListener(listener);
+//       twitterStream.sample();
     }
 
 	/**
@@ -120,6 +120,8 @@ public class MainServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		System.out.println("Do get");
+		System.out.println("category:"+request.getParameter("category"));
+		String category=request.getParameter("category");
 		HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
 		 Condition condition = new Condition()
 		    .withComparisonOperator(ComparisonOperator.NE.toString())
@@ -127,8 +129,19 @@ public class MainServlet extends HttpServlet {
 		Condition condition2 = new Condition()
 		 	.withComparisonOperator(ComparisonOperator.NE.toString())
 		    .withAttributeValueList(new AttributeValue().withN("0"));
+		
+		Condition condition3 = new Condition()
+	 	.withComparisonOperator(ComparisonOperator.CONTAINS);
+	    
+		
+		
 		scanFilter.put("geoLat", condition);
 		scanFilter.put("geoLng",condition2);
+		if(category!=null && !category.isEmpty()){
+			condition3.withAttributeValueList(new AttributeValue().withS(category));
+			scanFilter.put("content", condition3);
+		}
+		
 		String tableName = DYNAMODB_TABLE_NAME;
 		ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
 		ScanResult scanResult = DYNAMODB.scan(scanRequest);

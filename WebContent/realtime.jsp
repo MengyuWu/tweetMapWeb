@@ -11,6 +11,7 @@
 <%@page  import="java.util.List" %>
 <%@page  import="java.util.ArrayList" %>
 <%@page  import="static tweetBasic.AWSResourceSetup.*" %>
+<%@page import="com.google.gson.Gson" %>
 
 <%! // Share the client objects across threads to
     // avoid creating new clients for each web request
@@ -33,42 +34,7 @@
     if (request.getMethod().equals("HEAD")) return;
 %>
 
-<%
-	HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-	 Condition condition = new Condition()
-	    .withComparisonOperator(ComparisonOperator.NE.toString())
-	    .withAttributeValueList(new AttributeValue().withN("0"));
-	Condition condition2=new Condition()
-	 	.withComparisonOperator(ComparisonOperator.NE.toString())
-	    .withAttributeValueList(new AttributeValue().withN("0"));
-	scanFilter.put("geoLat", condition);
-	scanFilter.put("geoLng",condition2); 
-	String tableName=DYNAMODB_TABLE_NAME;
-	ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
-	ScanResult scanResult = DYNAMODB.scan(scanRequest);
-	
-	//String createdBy=scanResult.getItems().get(0).get("createdBy").getS();
-	//String creationTime=scanResult.getItems().get(0).get("creationTime").getS();
-	//out.println(scanResult);
-	
-	int size=scanResult.getItems().size();
-	List<List<Double>> locations=new ArrayList<List<Double>>();
-	for(int i=0; i<size; i++){
-		String latstr=scanResult.getItems().get(i).get("geoLat").getN();
-		String lngstr=scanResult.getItems().get(i).get("geoLng").getN();
-		double lat=Double.parseDouble(latstr);
-		double lng=Double.parseDouble(lngstr);
-		ArrayList<Double> pair=new ArrayList<Double>();
-		pair.add(lat);
-		pair.add(lng);
-		locations.add(pair);
-		//out.println("lat: "+lat+" lng: "+lng);
-		
-	}
-	
-	//out.println(locations);
-    	          		 
-%>
+
 
 <!DOCTYPE html>
 <html>
@@ -85,13 +51,13 @@
         height: 100%;
         width: 80%;
       }
-      .side-bar {
+     /*  .side-bar {
           position: fixed;
           right: 0;
           top: 0;
           width: 20%;
           background: #fff;
-      }
+      } */
 #floating-panel {
   position: absolute;
   top: 10px;
@@ -124,20 +90,32 @@
       <button onclick="changeGradient()">Change gradient</button>
       <button onclick="changeRadius()">Change radius</button>
       <button onclick="changeOpacity()">Change opacity</button>
-      <div> Tweet Num:<span id="Counter"><%=locations.size()%></span></div>
+      
+      <select id="category" onchange="getCategoy(this)">
+      <option value="">All</option>
+	  <option value="tech">Tech</option>
+	  <option value="fashion">Fashion</option>
+	  <option value="food">Food</option>
+	  <option value="at">Travel</option>
+	  </select>
+      <div> Tweet Num:<span id="Counter">0</span></div>
     </div>
 
    <div id="map"></div>
-   <div class="side-bar"></div>
+   <!--<div class="side-bar"></div> -->
 
    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
    <script>
 
+//global valuable;
 var map, heatmap, pointsmap;
+var markers=[];
 var circles=[];
 var flag="heat";
+var tweetDataJS;
 
 function initMap() {
+  initializeData();
   var mapProp = {
 		  center:{lat: 37.775, lng: -122.434},
 		  zoom:2,
@@ -145,28 +123,36 @@ function initMap() {
   };
   map = new google.maps.Map(document.getElementById('map'), mapProp);
 
-  google.maps.event.addListenerOnce(map, 'idle', function(){
+     google.maps.event.addListenerOnce(map, 'idle', function(){
       requestData();
   // document.getElementById('ajax_loading_icon').style.display = "none";
   // document.getElementById('map_canvas').style.visibility = "visible";
   });
   // google.maps.event.addDomListener(window, 'load', requestData);
-  // requestData();
+  // requestData();    
+  
+  heatmap = new google.maps.visualization.HeatmapLayer({
+	    data: getPoints(tweetDataJS),
+	    map: map
+	  });
 }
 
-function getPointsMap(data){
-	flag="points";
 
+function getPointsMap(){
+	flag="points";
+	
 /* 	var mapProp = {
 			  center:{lat: 37.775, lng: -122.434},
 			  zoom:13,
 			  mapTypeId:google.maps.MapTypeId.ROADMAP
 			  };
 
-
+	  
 	map = new google.maps.Map(document.getElementById('map'), mapProp); */
-	var positions=getPoints(data);
+	
+	var positions=getPoints(tweetDataJS);
 	  for (i in positions){
+	  	
 	  	var latLng=positions[i];
 	    var point = new google.maps.Circle({
 	  		  center: latLng,
@@ -177,34 +163,45 @@ function getPointsMap(data){
 	  		  fillColor:"#0000FF",
 	  		  fillOpacity:0.9
 	  		  });
-	  	point.setMap(map);
+	  	point.setMap(map); 
 	  	circles.push(point);
-
+	  	
 	  	//marker:
 	  	/* var marker = new google.maps.Marker({
 	  	    position:{lat: latLng.lat(), lng:latLng.lng()},
 	  	    map:map,
 	  	    title: 'Hello World!'
-	  	  });
+	  	  }); 
 	  	markers.push(marker); */
 	  }
-}
+};
 
-function getHeatMap(data){
+function getHeatMap(){
 	flag="heat";
-  var points = getPoints(data);
-    heatmap = new google.maps.visualization.HeatmapLayer({
-	     data: points,
-	      map: map
+	
+	/* var mapProp = {
+			  center:{lat: 37.775, lng: -122.434},
+			  zoom:13,
+			  mapTypeId:google.maps.MapTypeId.ROADMAP
+			  };
+
+	  
+	map = new google.maps.Map(document.getElementById('map'), mapProp); */
+	heatmap = new google.maps.visualization.HeatmapLayer({
+	    data: getPoints(tweetDataJS),
+	    map: map
 	  });
-}
+};
+
 
 function toggleHeatmap() {
-      heatmap.setMap(heatmap.getMap() ? null : map);
-      if (!heatmap.map) {
-          DeletePoints();
-          getPointsMap();
-      }
+	if(flag=="heat"){
+		 heatmap.setMap(null);
+		 getPointsMap();
+	 }else if(flag="points"){
+		 DeletePoints();
+		 getHeatMap();
+	 }
 };
 
 function DeletePoints() {
@@ -253,27 +250,90 @@ function getPoints(data) {
   });
 };
 
-function requestData() {
+
+
+
+ function requestData() {
   window.setInterval(function() {
   	//alert("real time update");
-    $.getJSON('MainServlet', function(data) {
+  	var e = document.getElementById("category");
+	var key = e.options[e.selectedIndex].value;
+	
+    $.getJSON('MainServlet',{
+        category:key
+    },  function(data) {
+      //update local data;
+      tweetDataJS=data;
       updateCounter(data);
+     
        if(flag=="heat") {
          //TODO: update points in heatmap
           if (heatmap && typeof heatmap.setMap === 'function') {
             heatmap.setMap(null);
           }
-          getHeatMap(data);
+          getHeatMap();
        } else if(flag=="points") {
          //TODO: update points in heatmap
          DeletePoints();
-         getPointsMap(data);
+         getPointsMap();
        }
 
-       populateSideBar(data);
+      // populateSideBar(data);
    });
 
-  }, 3000);
+  }, 30000);
+}; 
+
+
+
+function initializeData(){
+	 
+	  $.getJSON('MainServlet', function(data) {
+	      //update local data;
+	      tweetDataJS=data;
+	      updateCounter(data);
+	     
+	       if(flag=="heat") {
+	         //TODO: update points in heatmap
+	          if (heatmap && typeof heatmap.setMap === 'function') {
+	            heatmap.setMap(null);
+	          }
+	          getHeatMap();
+	       } else if(flag=="points") {
+	         //TODO: update points in heatmap
+	         DeletePoints();
+	         getPointsMap();
+	       }
+
+	      // populateSideBar(data);
+	  });
+};
+
+
+function getCategoy(category) {
+    var key = category.value;  
+    //document.write(key);
+    $.getJSON('MainServlet',{
+         category:key
+       },  function(data) {
+        //update local data;
+        tweetDataJS=data;
+        updateCounter(data);
+       
+         if(flag=="heat") {
+           //TODO: update points in heatmap
+            if (heatmap && typeof heatmap.setMap === 'function') {
+              heatmap.setMap(null);
+            }
+            getHeatMap();
+         } else if(flag=="points") {
+           //TODO: update points in heatmap
+           DeletePoints();
+           getPointsMap();
+         }
+
+        
+     });
 };
 
 function updateCounter(data) {
