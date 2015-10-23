@@ -93,10 +93,11 @@
       
       <select id="category" onchange="getCategoy(this)">
       <option value="">All</option>
-	  <option value="tech">Tech</option>
-	  <option value="fashion">Fashion</option>
-	  <option value="food">Food</option>
-	  <option value="at">Travel</option>
+	  <option value="recreation">recreation</option>
+	  <option value="science">science_technology</option>
+	  <option value="sports">sports</option>
+	  <option value="arts">arts_entertainment</option>
+	  <option value="business">business</option>
 	  </select>
       <div> Tweet Num:<span id="Counter">0</span></div>
     </div>
@@ -113,6 +114,12 @@ var markers=[];
 var circles=[];
 var flag="heat";
 var tweetDataJS;
+
+// color
+var b_default="#0000FF";
+var r_negative="#FF0000";
+var g_positive="#009900";
+var y_neutral="#FFCC00";
 
 function initMap() {
   initializeData();
@@ -151,16 +158,18 @@ function getPointsMap(){
 	map = new google.maps.Map(document.getElementById('map'), mapProp); */
 	
 	var positions=getPoints(tweetDataJS);
+	var sentiments=getSentiment(tweetDataJS);
+	
 	  for (i in positions){
-	  	
+	  	var color=getSentimentColor(sentiments[i]);
 	  	var latLng=positions[i];
 	    var point = new google.maps.Circle({
 	  		  center: latLng,
 	  		  radius:20000,
-	  		  strokeColor:"#0000FF",
+	  		  strokeColor:color,
 	  		  strokeOpacity:0.8,
 	  		  strokeWeight:2,
-	  		  fillColor:"#0000FF",
+	  		  fillColor:color,
 	  		  fillOpacity:0.9
 	  		  });
 	  	point.setMap(map); 
@@ -175,6 +184,24 @@ function getPointsMap(){
 	  	markers.push(marker); */
 	  }
 };
+
+
+function getSentimentColor(sentiment){
+	/* var b_default="#0000FF";
+	var r_negative="#FF0000";
+	var g_positive="#009900";
+	var y_neutral="#FFCC00"; */
+	var color=b_default;
+	if(sentiment=="negative"){
+		color=r_negative;
+	}else if(sentiment=="positive"){
+		color=g_positive;
+	}else if(sentiment=="y_neutral"){
+		color=y_neutral
+	}
+	return color;
+};
+
 
 function getHeatMap(){
 	flag="heat";
@@ -251,6 +278,11 @@ function getPoints(data) {
 };
 
 
+function getSentiment(data){
+	return data.map(function(tweet) {
+	     return tweet['sentiment'];
+	});
+}
 
 
  function requestData() {

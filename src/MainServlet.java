@@ -139,7 +139,7 @@ public class MainServlet extends HttpServlet {
 		scanFilter.put("geoLng",condition2);
 		if(category!=null && !category.isEmpty()){
 			condition3.withAttributeValueList(new AttributeValue().withS(category));
-			scanFilter.put("content", condition3);
+			scanFilter.put("category", condition3);
 		}
 		
 		String tableName = DYNAMODB_TABLE_NAME;
@@ -153,6 +153,18 @@ public class MainServlet extends HttpServlet {
 			String lngstr = scanResult.getItems().get(i).get("geoLng").getN();
 			String content = scanResult.getItems().get(i).get("content").getS();
 			String username = scanResult.getItems().get(i).get("username").getS();
+			
+			String categorydb="";
+			String sentiment="";
+			
+			if(scanResult.getItems().get(i).get("category") != null){
+				categorydb=scanResult.getItems().get(i).get("category").getS();
+			}
+			
+			if(scanResult.getItems().get(i).get("sentiment")!=null){
+				sentiment=scanResult.getItems().get(i).get("sentiment").getS();
+			}
+			
 //			double lat = Double.parseDouble(latstr);
 //			double lng = Double.parseDouble(lngstr);
 			
@@ -161,8 +173,10 @@ public class MainServlet extends HttpServlet {
 			tweet.put("lng", lngstr);
 			tweet.put("content", content);
 			tweet.put("username", username);
-
+			tweet.put("category",categorydb);
+			tweet.put("sentiment",sentiment);
 			tweets.add(tweet);
+			//System.out.println("category:"+categorydb+" sentiment:"+sentiment);
 		}
 
 		//convert object to JSON format
