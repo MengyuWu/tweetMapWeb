@@ -140,40 +140,40 @@ public class MainServlet extends HttpServlet {
 		ScanResult scanResult = DYNAMODB.scan(scanRequest);
 
 		int size = scanResult.getItems().size();
-		List<HashMap<String,String>> tweets = new ArrayList<HashMap<String,String>>();
-		for(int i = 0; i<size; i++){
-			String latstr = scanResult.getItems().get(i).get("geoLat").getN();
-			String lngstr = scanResult.getItems().get(i).get("geoLng").getN();
+		ArrayList<HashMap<String,String>> tweets = new ArrayList<HashMap<String,String>>();
+		
+		for (int i = 0; i < size; i++) {
+			// Get latitude, longitude, content, username, created (long), category, sentiment
+			String lat = scanResult.getItems().get(i).get("geoLat").getN();
+			String lng = scanResult.getItems().get(i).get("geoLng").getN();
 			String content = scanResult.getItems().get(i).get("content").getS();
 			String username = scanResult.getItems().get(i).get("username").getS();
+			String created = scanResult.getItems().get(i).get("createdLong").getN();
+			// No longer check for null because we only save tweets we can classify.
+			String categorydb = scanResult.getItems().get(i).get("category").getS();
+			String sentiment = scanResult.getItems().get(i).get("sentiment").getS();
 			
-			String categorydb="";
-			String sentiment="";
-			
-			if(scanResult.getItems().get(i).get("category") != null){
-				categorydb=scanResult.getItems().get(i).get("category").getS();
-			}
-			
-			if(scanResult.getItems().get(i).get("sentiment")!=null){
-				sentiment=scanResult.getItems().get(i).get("sentiment").getS();
-			}
-			
-//			double lat = Double.parseDouble(latstr);
-//			double lng = Double.parseDouble(lngstr);
-			
+			// Create tweet hash.
 			HashMap<String,String> tweet = new HashMap<String,String>();
-			tweet.put("lat", latstr);
-			tweet.put("lng", lngstr);
+			tweet.put("lat", lat);
+			tweet.put("lng", lng);
 			tweet.put("content", content);
 			tweet.put("username", username);
-			tweet.put("category",categorydb);
-			tweet.put("sentiment",sentiment);
-			tweets.add(tweet);
-			//System.out.println("category:"+categorydb+" sentiment:"+sentiment);
+			tweet.put("category", categorydb);
+			tweet.put("sentiment", sentiment);
+			tweet.put("created", created);
+			
+			// Order tweet by time created. Most recent at the top of the list.
+			int position = 0;
+			while (position < tweets.size() && Long.parseLong(tweets.get(position).get("created")) > Long.parseLong(created)) {
+				position++;
+			}	
+			tweets.add(position, tweet);
+			
 		}
 
 		// Convert object to JSON format.
-		System.out.println("size: "+tweets.size());
+		System.out.println("size: " + tweets.size());
 		String json = new Gson().toJson(tweets);
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
