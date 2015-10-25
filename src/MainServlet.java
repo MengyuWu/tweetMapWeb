@@ -1,28 +1,26 @@
-import com.amazonaws.services.dynamodbv2.*;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.google.gson.Gson;
-import com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable;
 
 import static tweetBasic.AWSResourceSetup.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
+//import java.util.Date;
+//import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import tweetBasic.Tweet;
-import twitter4j.StallWarning;
-import twitter4j.Status;
-import twitter4j.StatusDeletionNotice;
-import twitter4j.StatusListener;
-import twitter4j.TwitterStream;
-import twitter4j.TwitterStreamFactory;
+//import tweetBasic.Tweet;
+//import twitter4j.StallWarning;
+//import twitter4j.Status;
+//import twitter4j.StatusDeletionNotice;
+//import twitter4j.StatusListener;
+//import twitter4j.TwitterStream;
+//import twitter4j.TwitterStreamFactory;
 import twitter4j.conf.ConfigurationBuilder;
 
 /**
@@ -41,7 +39,7 @@ public class MainServlet extends HttpServlet {
 	       .setOAuthAccessTokenSecret("bKdTWWUVrtg1WtTog65t2XscxdvNbHszxDQLHBpZkutIG");
 	}
 
-    private static TwitterStream twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
+//    private static TwitterStream twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
 
     /**
      * @see HttpServlet#HttpServlet()
@@ -116,9 +114,7 @@ public class MainServlet extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		System.out.println("Do get");
-		System.out.println("category:"+request.getParameter("category"));
-		String category=request.getParameter("category");
+		String category = request.getParameter("category");		
 		HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
 		 Condition condition = new Condition()
 		    .withComparisonOperator(ComparisonOperator.NE.toString())
@@ -171,9 +167,15 @@ public class MainServlet extends HttpServlet {
 			tweets.add(position, tweet);
 			
 		}
+		
+		// Log result.
+		System.out.println("Successfully handled GET request.");
+		if (category != null) {
+			System.out.println("category:" + category);
+		}
+		System.out.println("size: " + tweets.size());
 
 		// Convert object to JSON format.
-		System.out.println("size: " + tweets.size());
 		String json = new Gson().toJson(tweets);
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
