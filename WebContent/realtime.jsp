@@ -110,9 +110,9 @@
 
 //global valuable;
 var map, heatmap, pointsmap;
-var markers=[];
-var circles=[];
-var flag="heat";
+var markers = [];
+var circles = [];
+var flag = "heat";
 var tweetDataJS;
 
 // color
@@ -122,12 +122,15 @@ var g_positive="#009900";
 var y_neutral="#FFCC00";
 
 function initMap() {
+	
   initializeData();
+  
   var mapProp = {
 		  center:{lat: 37.775, lng: -122.434},
 		  zoom:2,
 		  mapTypeId:google.maps.MapTypeId.ROADMAP
   };
+  
   map = new google.maps.Map(document.getElementById('map'), mapProp);
 
      google.maps.event.addListenerOnce(map, 'idle', function(){
@@ -135,18 +138,19 @@ function initMap() {
   // document.getElementById('ajax_loading_icon').style.display = "none";
   // document.getElementById('map_canvas').style.visibility = "visible";
   });
+     
   // google.maps.event.addDomListener(window, 'load', requestData);
   // requestData();    
   
   heatmap = new google.maps.visualization.HeatmapLayer({
-	    data: getPoints(tweetDataJS),
-	    map: map
-	  });
+	data: getPoints(tweetDataJS),
+    map: map
+  });
 }
 
 
 function getPointsMap(){
-	flag="points";
+	flag = "points";
 	
 /* 	var mapProp = {
 			  center:{lat: 37.775, lng: -122.434},
@@ -157,12 +161,12 @@ function getPointsMap(){
 	  
 	map = new google.maps.Map(document.getElementById('map'), mapProp); */
 	
-	var positions=getPoints(tweetDataJS);
-	var sentiments=getSentiment(tweetDataJS);
+	var positions = getPoints(tweetDataJS);
+	var sentiments = getSentiment(tweetDataJS);
 	
-	  for (i in positions){
-	  	var color=getSentimentColor(sentiments[i]);
-	  	var latLng=positions[i];
+	  for (i in positions) {
+	  	var color = getSentimentColor(sentiments[i]);
+	  	var latLng = positions[i];
 	    var point = new google.maps.Circle({
 	  		  center: latLng,
 	  		  radius:20000,
@@ -192,19 +196,19 @@ function getSentimentColor(sentiment){
 	var g_positive="#009900";
 	var y_neutral="#FFCC00"; */
 	var color=b_default;
-	if(sentiment=="negative"){
+	if (sentiment == "negative") {
 		color=r_negative;
-	}else if(sentiment=="positive"){
-		color=g_positive;
-	}else if(sentiment=="y_neutral"){
-		color=y_neutral
+	} else if (sentiment == "positive") {
+		color = g_positive;
+	} else if (sentiment == "y_neutral") {
+		color = y_neutral
 	}
 	return color;
 };
 
 
 function getHeatMap(){
-	flag="heat";
+	flag = "heat";
 	
 	/* var mapProp = {
 			  center:{lat: 37.775, lng: -122.434},
@@ -212,7 +216,6 @@ function getHeatMap(){
 			  mapTypeId:google.maps.MapTypeId.ROADMAP
 			  };
 
-	  
 	map = new google.maps.Map(document.getElementById('map'), mapProp); */
 	heatmap = new google.maps.visualization.HeatmapLayer({
 	    data: getPoints(tweetDataJS),
@@ -222,17 +225,17 @@ function getHeatMap(){
 
 
 function toggleHeatmap() {
-	if(flag=="heat"){
+	if (flag == "heat") {
 		 heatmap.setMap(null);
 		 getPointsMap();
-	 }else if(flag="points"){
+	 } else if (flag="points") {
 		 DeletePoints();
 		 getHeatMap();
 	 }
 };
 
 function DeletePoints() {
-    //Loop through all the markers and remove
+    // Loop through all the markers and remove
     for (var i = 0; i < circles.length; i++) {
     	circles[i].setMap(null);
     }
@@ -277,105 +280,95 @@ function getPoints(data) {
   });
 };
 
-
 function getSentiment(data){
 	return data.map(function(tweet) {
 	     return tweet['sentiment'];
 	});
 }
 
-
- function requestData() {
+function requestData() {
   window.setInterval(function() {
-  	//alert("real time update");
+  	// alert("real time update");
   	var e = document.getElementById("category");
 	var key = e.options[e.selectedIndex].value;
 	
     $.getJSON('MainServlet',{
         category:key
     },  function(data) {
-      //update local data;
-      tweetDataJS=data;
+      // update local data;
+      tweetDataJS = data;
       updateCounter(data);
      
-       if(flag=="heat") {
-         //TODO: update points in heatmap
+       if (flag == "heat") {
+         // TODO: update points in heatmap
           if (heatmap && typeof heatmap.setMap === 'function') {
             heatmap.setMap(null);
           }
           getHeatMap();
-       } else if(flag=="points") {
+       } else if (flag == "points") {
          //TODO: update points in heatmap
          DeletePoints();
          getPointsMap();
        }
-
-      // populateSideBar(data);
+     populateSideBar(data);
    });
-
   }, 30000);
 }; 
 
-
-
-function initializeData(){
-	 
+function initializeData() {
 	  $.getJSON('MainServlet', function(data) {
-	      //update local data;
-	      tweetDataJS=data;
+	      // Update local data.
+	      tweetDataJS = data;
 	      updateCounter(data);
 	     
-	       if(flag=="heat") {
-	         //TODO: update points in heatmap
-	          if (heatmap && typeof heatmap.setMap === 'function') {
-	            heatmap.setMap(null);
+	       if (flag == "heat") {
+	         // Update points in heatmap.
+	         if (heatmap && typeof heatmap.setMap === 'function') {
+	           heatmap.setMap(null);
 	          }
 	          getHeatMap();
-	       } else if(flag=="points") {
-	         //TODO: update points in heatmap
+	       } else if (flag == "points") {
+	         // Update points in heatmap.
 	         DeletePoints();
 	         getPointsMap();
 	       }
-
 	      // populateSideBar(data);
 	  });
 };
 
-
 function getCategoy(category) {
     var key = category.value;  
-    //document.write(key);
+    // document.write(key);
     $.getJSON('MainServlet',{
          category:key
        },  function(data) {
-        //update local data;
-        tweetDataJS=data;
+        // Update local data.
+        tweetDataJS = data;
         updateCounter(data);
        
-         if(flag=="heat") {
-           //TODO: update points in heatmap
-            if (heatmap && typeof heatmap.setMap === 'function') {
+         if (flag == "heat") {
+           // Update points in heatmap.
+           if (heatmap && typeof heatmap.setMap === 'function') {
               heatmap.setMap(null);
             }
             getHeatMap();
-         } else if(flag=="points") {
-           //TODO: update points in heatmap
+         } else if (flag == "points") {
+           // Update points in heatmap.
            DeletePoints();
            getPointsMap();
          }
-
-        
+  
      });
 };
 
 function updateCounter(data) {
-  document.getElementById("Counter").innerHTML=data.length;
+  document.getElementById("Counter").innerHTML = data.length;
 };
 
 // Sidebar
 function populateSideBar(data) {
   $('.side-bar').empty();
-  for (var i=0; i<=10; i++) {
+  for (var i = 0; i <= 10; i++) {
       $('.side-bar').append(
         '<div>' + data[i]['content'] + '</div><hr>'
       );

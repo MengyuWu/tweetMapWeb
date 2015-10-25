@@ -25,11 +25,10 @@ import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 import twitter4j.conf.ConfigurationBuilder;
 
-//mw2907, nb2406
-
 /**
  * Servlet implementation class MainServlet
  */
+
 public class MainServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -41,7 +40,6 @@ public class MainServlet extends HttpServlet {
 	       .setOAuthAccessToken("3095412628-4kLyHeZWV3p4Swmqx0d2lGSfJbtNqPbl0VPuMta")
 	       .setOAuthAccessTokenSecret("bKdTWWUVrtg1WtTog65t2XscxdvNbHszxDQLHBpZkutIG");
 	}
-
 
     private static TwitterStream twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
 
@@ -118,7 +116,6 @@ public class MainServlet extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
 		System.out.println("Do get");
 		System.out.println("category:"+request.getParameter("category"));
 		String category=request.getParameter("category");
@@ -128,16 +125,12 @@ public class MainServlet extends HttpServlet {
 		    .withAttributeValueList(new AttributeValue().withN("0"));
 		Condition condition2 = new Condition()
 		 	.withComparisonOperator(ComparisonOperator.NE.toString())
-		    .withAttributeValueList(new AttributeValue().withN("0"));
-		
-		Condition condition3 = new Condition()
-	 	.withComparisonOperator(ComparisonOperator.CONTAINS);
+		    .withAttributeValueList(new AttributeValue().withN("0"));		
+		Condition condition3 = new Condition().withComparisonOperator(ComparisonOperator.CONTAINS);
 	    
-		
-		
 		scanFilter.put("geoLat", condition);
-		scanFilter.put("geoLng",condition2);
-		if(category!=null && !category.isEmpty()){
+		scanFilter.put("geoLng", condition2);
+		if (category != null && !category.isEmpty()) {
 			condition3.withAttributeValueList(new AttributeValue().withS(category));
 			scanFilter.put("category", condition3);
 		}
@@ -179,7 +172,7 @@ public class MainServlet extends HttpServlet {
 			//System.out.println("category:"+categorydb+" sentiment:"+sentiment);
 		}
 
-		//convert object to JSON format
+		// Convert object to JSON format.
 		System.out.println("size: "+tweets.size());
 		String json = new Gson().toJson(tweets);
 		response.setContentType("application/json");
