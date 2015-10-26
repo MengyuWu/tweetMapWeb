@@ -133,6 +133,23 @@
       .user-tweet .user-content {
       	font-size: 10px;
       }
+      .user-tweet .user-created {
+        font-size: 10px;
+        color: #ccc;
+      }
+      .user-tweet .user-sentiment {
+        font-size: 10px;
+        color: #4099FF;
+      }
+      .user-sentiment.positive {
+      	color: green;
+      }
+      .user-sentiment.negative {
+      	color: red;
+      }
+      .user-sentiment.neutral {
+      	color: blue;
+      }
       .fade-bg {
       	background: rgba(0,0,0,0.3);
       	position: fixed;
@@ -180,7 +197,7 @@
 		  <option value="arts">arts_entertainment</option>
 		  <option value="business">business</option>
 		  </select>
-	      <div> Tweet Num:<span id="Counter">0</span></div>
+	      <div> Total Tweets: <span id="Counter">0</span></div>
 	    </div>
 	
 	   	<div id="map"></div>
@@ -251,13 +268,13 @@ function getPointsMap(){
 	
 	  for (var i in positions) {
 		  var color = getSentimentColor(sentiments[i]);
-		  console.log(tweetDataJS[i]);
           var marker = new RichMarker({
               position: positions[i],
               map: map,
               shadow: 'none',
-              content: '<div class="tweet-point" data-user="' + tweetDataJS[i]['username'] + '" data-content="' + tweetDataJS[i]['content'] + '" style="background:' + color + '"></div>'
-          }).setMap(map);
+              content: '<div class="tweet-point" data-user="' + tweetDataJS[i]['username'] +
+              '" data-content="' + tweetDataJS[i]['content'].replace('"', '\"') + '" style="background:' + color + '"></div>'
+          }).setMap(map); 
 	  }
 
 };
@@ -269,7 +286,7 @@ function getSentimentColor(sentiment){
 		color=r_negative;
 	} else if (sentiment == "positive") {
 		color = g_positive;
-	} else if (sentiment == "y_neutral") {
+	} else if (sentiment == "neutral") {
 		color = y_neutral
 	}
 	return color;
@@ -428,14 +445,25 @@ function populateSideBar(data) {
   $('.side-bar').empty();
   for (var i = 0; i <= 10; i++) {
 	  var tweet = data[i];
+	  var parsedContent = wrapLinks(tweet['content']);
       $('.side-bar').append(
     	'<div class="user-tweet">' +
-    		'<div class="user-name">' + tweet['username'] + '</div>' +
-        	'<div class="user-content">' + tweet['content'] + '</div>' +
+	    	'<div class="user-created">' + tweet['createdstr'] +  '</div>' +
+        	'<div class="user-created"> (' + tweet['lat'] + ', ' +  tweet['lng'] + ') </div>' +
+	    	'<div class="user-name">' + tweet['username'] + '</div>' +
+        	'<div class="user-content">' + parsedContent + '</div>' +
+        	'<div class="user-sentiment ' + tweet['sentiment'] + '">' + tweet['sentiment'] +
+        	', ' + tweet['category'] + '</div>' +
        	'</div>'
       );
   }
 };
+
+function wrapLinks(content) {
+	return content.replace(		
+			/(?:(https?\:\/\/[^\s]+))/m,
+			'<a target="_blank" href="$1">$1</a>');	
+}
 
 $('.side-bar-toggle').on('click', function() {
 	$('.map-container').toggleClass('active');
@@ -449,7 +477,7 @@ $('body').on('click', '.tweet-point', function() {
 	var user = $(this).data('user');
 	$('.fade-bg, .lightbox').fadeIn();
 	$('.lightbox .user').text(user);
-	$('.lightbox .tweet').text(content);
+	$('.lightbox .tweet').html(wrapLinks(content));
 });
 
 $('.fade-bg').click(function() {

@@ -4,23 +4,18 @@ import com.google.gson.Gson;
 import static tweetBasic.AWSResourceSetup.*;
 
 import java.io.IOException;
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-//import java.util.Date;
-//import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-//import tweetBasic.Tweet;
-//import twitter4j.StallWarning;
-//import twitter4j.Status;
-//import twitter4j.StatusDeletionNotice;
-//import twitter4j.StatusListener;
-//import twitter4j.TwitterStream;
-//import twitter4j.TwitterStreamFactory;
 import twitter4j.conf.ConfigurationBuilder;
 
 /**
@@ -145,9 +140,27 @@ public class MainServlet extends HttpServlet {
 			String content = scanResult.getItems().get(i).get("content").getS();
 			String username = scanResult.getItems().get(i).get("username").getS();
 			String created = scanResult.getItems().get(i).get("createdLong").getN();
-			// No longer check for null because we only save tweets we can classify.
-			String categorydb = scanResult.getItems().get(i).get("category").getS();
-			String sentiment = scanResult.getItems().get(i).get("sentiment").getS();
+			String createdDate = scanResult.getItems().get(i).get("createdDate").getS();
+			String categorydb = "no category";
+			if (scanResult.getItems().get(i).get("category") != null) {
+				categorydb = scanResult.getItems().get(i).get("category").getS();
+			}
+			String sentiment = "no sentiment";
+			if (scanResult.getItems().get(i).get("sentiment") != null) {
+			    sentiment = scanResult.getItems().get(i).get("sentiment").getS();
+			}
+			
+			// Format date.
+		    DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+		    DateFormat toFormat = new SimpleDateFormat("kk:mm:ss z EEE MM/dd/yyyy");
+		    Date date;
+		    String createdstr;
+			try {
+				date = fromFormat.parse(createdDate);
+			    createdstr = toFormat.format(date);
+			} catch (ParseException e) {
+				createdstr = createdDate;
+			}
 			
 			// Create tweet hash.
 			HashMap<String,String> tweet = new HashMap<String,String>();
@@ -158,6 +171,7 @@ public class MainServlet extends HttpServlet {
 			tweet.put("category", categorydb);
 			tweet.put("sentiment", sentiment);
 			tweet.put("created", created);
+			tweet.put("createdstr", createdstr);
 			
 			// Order tweet by time created. Most recent at the top of the list.
 			int position = 0;
