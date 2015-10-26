@@ -11,6 +11,7 @@
 <%@page  import="java.util.List" %>
 <%@page  import="java.util.ArrayList" %>
 <%@page  import="static tweetBasic.AWSResourceSetup.*" %>
+<%@page import="com.google.gson.Gson" %>
 
 <%! // Share the client objects across threads to
     // avoid creating new clients for each web request
@@ -33,42 +34,7 @@
     if (request.getMethod().equals("HEAD")) return;
 %>
 
-<%
-	HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-	 Condition condition = new Condition()
-	    .withComparisonOperator(ComparisonOperator.NE.toString())
-	    .withAttributeValueList(new AttributeValue().withN("0"));
-	Condition condition2=new Condition()
-	 	.withComparisonOperator(ComparisonOperator.NE.toString())
-	    .withAttributeValueList(new AttributeValue().withN("0"));
-	scanFilter.put("geoLat", condition);
-	scanFilter.put("geoLng",condition2); 
-	String tableName=DYNAMODB_TABLE_NAME;
-	ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
-	ScanResult scanResult = DYNAMODB.scan(scanRequest);
-	
-	//String createdBy=scanResult.getItems().get(0).get("createdBy").getS();
-	//String creationTime=scanResult.getItems().get(0).get("creationTime").getS();
-	//out.println(scanResult);
-	
-	int size=scanResult.getItems().size();
-	List<List<Double>> locations=new ArrayList<List<Double>>();
-	for(int i=0; i<size; i++){
-		String latstr=scanResult.getItems().get(i).get("geoLat").getN();
-		String lngstr=scanResult.getItems().get(i).get("geoLng").getN();
-		double lat=Double.parseDouble(latstr);
-		double lng=Double.parseDouble(lngstr);
-		ArrayList<Double> pair=new ArrayList<Double>();
-		pair.add(lat);
-		pair.add(lng);
-		locations.add(pair);
-		//out.println("lat: "+lat+" lng: "+lng);
-		
-	}
-	
-	//out.println(locations);
-    	          		 
-%>
+
 
 <!DOCTYPE html>
 <html>
@@ -81,139 +47,274 @@
         margin: 0;
         padding: 0;
       }
+      body {
+      	font-family: Helvetica Neue, Helvetica, Arial, sans-serif; 
+     }
+      .map-container {
+      	width: 80%;
+      	height: 100%;
+      	position: relative;
+      }
+      .map-container.active {
+      	width: 98%;
+      }
+      #floating-panel {
+		  position: absolute;
+		  top: 10px;
+		  width: 60%;
+		  left: 20%;
+		  z-index: 5;
+		  background-color: #fff;
+		  padding: 5px;
+		  border: 1px solid #ccc;
+		  text-align: center;
+		  font-family: 'Roboto','sans-serif';
+		  line-height: 30px;
+		  padding-left: 10px;
+		  -webkit-box-shadow: 1px 1px 14px -1px rgba(0,0,0,0.4);
+		  -moz-box-shadow: 1px 1px 14px -1px rgba(0,0,0,0.4);
+		  -ms-box-shadow: 1px 1px 14px -1px rgba(0,0,0,0.4);
+		  box-shadow: 1px 1px 14px -1px rgba(0,0,0,0.4);
+		}
       #map {
         height: 100%;
-        width: 80%;
+        width: 100%;
       }
-      .side-bar {
+      .tweet-point {
+      	width: 8px;
+      	height: 8px;
+		border-radius: 150px;
+     }
+      .side-bar-container {
           position: fixed;
           right: 0;
           top: 0;
           width: 20%;
+          height: 100%;
+          overflow: auto;
           background: #fff;
       }
-#floating-panel {
-  position: absolute;
-  top: 10px;
-  left: 25%;
-  z-index: 5;
-  background-color: #fff;
-  padding: 5px;
-  border: 1px solid #999;
-  text-align: center;
-  font-family: 'Roboto','sans-serif';
-  line-height: 30px;
-  padding-left: 10px;
-}
-
-      #floating-panel {
-        background-color: #fff;
-        border: 1px solid #999;
-        left: 25%;
-        padding: 5px;
-        position: absolute;
-        top: 10px;
-        z-index: 5;
+      .side-bar-container.active {
+      	right: -18%;
       }
+       .side-bar {
+      	width: 90%;
+      	float: left;
+      }
+      .side-bar-toggle {
+      	cursor: pointer;
+      	background: #4099FF;
+      	width: 10%;
+      	height: 100%;
+      	float: left;
+      }
+      .side-bar-toggle .arrow {
+      	width: 100%;
+    	-webkit-transform: rotate(180deg);
+      	-moz-transform: rotate(180deg);
+      	-ms-transform: rotate(180deg);
+      	transform: rotate(180deg);
+      }
+      .side-bar-toggle .arrow.closed {
+		-webkit-transform: rotate(0deg);
+      	-moz-transform: rotate(0deg);
+      	-ms-transform: rotate(0deg);
+      	transform: rotate(0deg);
+      }
+      .user-tweet {
+      	border-bottom: 1px solid #ccc;
+      	padding-bottom: 5px;
+      	margin: 5px;
+      }
+      .user-tweet .user-name {
+      	font-size: 12px;
+      	font-weight: bold;
+      }
+      .user-tweet .user-content {
+      	font-size: 10px;
+      }
+      .user-tweet .user-created {
+        font-size: 10px;
+        color: #ccc;
+      }
+      .user-tweet .user-sentiment {
+        font-size: 10px;
+        color: #4099FF;
+      }
+      .user-sentiment.positive {
+      	color: green;
+      }
+      .user-sentiment.negative {
+      	color: red;
+      }
+      .user-sentiment.neutral {
+      	color: blue;
+      }
+      .fade-bg {
+      	background: rgba(0,0,0,0.3);
+      	position: fixed;
+      	top: 0;
+      	left: 0;
+      	width: 100%;
+      	height: 100%;
+      	display: none;
+      	z-index: 999;
+     }
+     .lightbox {
+        width: 50%;
+    	background: #fff;
+    	z-index: 9999;
+    	position: absolute;
+    	top: 20%;
+    	left: 25%;
+    	display: none;
+   	}
+   	.lightbox .user {
+   		font-size: 14px;
+   		font-weight: bold;
+   	}
+   	.lightbox-tweet {
+   		margin: 10px;
+   		font-size: 12px;
+   	}
+
     </style>
   </head>
 
   <body>
-    <div id="floating-panel">
-      <button onclick="toggleHeatmap()">Toggle Heatmap</button>
-      <button onclick="changeGradient()">Change gradient</button>
-      <button onclick="changeRadius()">Change radius</button>
-      <button onclick="changeOpacity()">Change opacity</button>
-      <div> Tweet Num:<span id="Counter"><%=locations.size()%></span></div>
-    </div>
+  	<div class="map-container">
+	    <div id="floating-panel">
+	      <button onclick="toggleHeatmap()">Toggle Heatmap</button>
+	      <button onclick="changeGradient()">Change gradient</button>
+	      <button onclick="changeRadius()">Change radius</button>
+	      <button onclick="changeOpacity()">Change opacity</button>
+	      
+	      <select id="category" onchange="getCategoy(this)">
+	      <option value="">All</option>
+		  <option value="recreation">recreation</option>
+		  <option value="science">science_technology</option>
+		  <option value="sports">sports</option>
+		  <option value="arts">arts_entertainment</option>
+		  <option value="business">business</option>
+		  </select>
+	      <div> Total Tweets: <span id="Counter">0</span></div>
+	    </div>
+	
+	   	<div id="map"></div>
+  	</div>
+   	<div class="side-bar-container">
+   		<div class="side-bar-toggle">
+   			<img class="arrow" src="http://weareplrl.com/images/arrow-92-256.png" />
+   		</div>
+   		<div class="side-bar"></div>
+   	</div>
 
-   <div id="map"></div>
-   <div class="side-bar"></div>
-
+	<div class="fade-bg"></div>
+	<div class="lightbox">
+		<div class="lightbox-tweet">
+			<h2 class="user"></h2>
+			<div class="tweet"></div>
+		</div>
+	</div>
    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
    <script>
 
+//global valuable;
 var map, heatmap, pointsmap;
-var circles=[];
-var flag="heat";
+var markers = [];
+var circles = [];
+var flag = "heat";
+var tweetDataJS;
+
+// color
+var b_default="#0000FF";
+var r_negative="#FF0000";
+var g_positive="#009900";
+var y_neutral="#FFCC00";
+
+function loadRichMarker() {
+	var richLib = "https://google-maps-utility-library-v3.googlecode.com/svn/trunk/richmarker/src/richmarker-compiled.js";
+	$.getScript(richLib, initMap);
+}
 
 function initMap() {
+	
+  initializeData();
+  
   var mapProp = {
 		  center:{lat: 37.775, lng: -122.434},
 		  zoom:2,
 		  mapTypeId:google.maps.MapTypeId.ROADMAP
   };
+  
   map = new google.maps.Map(document.getElementById('map'), mapProp);
 
-  google.maps.event.addListenerOnce(map, 'idle', function(){
+     google.maps.event.addListenerOnce(map, 'idle', function(){
       requestData();
-  // document.getElementById('ajax_loading_icon').style.display = "none";
-  // document.getElementById('map_canvas').style.visibility = "visible";
   });
-  // google.maps.event.addDomListener(window, 'load', requestData);
-  // requestData();
+       
+  heatmap = new google.maps.visualization.HeatmapLayer({
+	data: getPoints([]),
+    map: map
+  });
 }
 
-function getPointsMap(data){
-	flag="points";
 
-/* 	var mapProp = {
-			  center:{lat: 37.775, lng: -122.434},
-			  zoom:13,
-			  mapTypeId:google.maps.MapTypeId.ROADMAP
-			  };
-
-
-	map = new google.maps.Map(document.getElementById('map'), mapProp); */
-	var positions=getPoints(data);
-	  for (i in positions){
-	  	var latLng=positions[i];
-	    var point = new google.maps.Circle({
-	  		  center: latLng,
-	  		  radius:20000,
-	  		  strokeColor:"#0000FF",
-	  		  strokeOpacity:0.8,
-	  		  strokeWeight:2,
-	  		  fillColor:"#0000FF",
-	  		  fillOpacity:0.9
-	  		  });
-	  	point.setMap(map);
-	  	circles.push(point);
-
-	  	//marker:
-	  	/* var marker = new google.maps.Marker({
-	  	    position:{lat: latLng.lat(), lng:latLng.lng()},
-	  	    map:map,
-	  	    title: 'Hello World!'
-	  	  });
-	  	markers.push(marker); */
+function getPointsMap(){
+	flag = "points";
+	
+	var positions = getPoints(tweetDataJS);
+	var sentiments = getSentiment(tweetDataJS);
+	
+	  for (var i in positions) {
+		  var color = getSentimentColor(sentiments[i]);
+          var marker = new RichMarker({
+              position: positions[i],
+              map: map,
+              shadow: 'none',
+              content: '<div class="tweet-point" data-user="' + tweetDataJS[i]['username'] +
+              '" data-content="' + tweetDataJS[i]['content'].replace('"', '\"') + '" style="background:' + color + '"></div>'
+          }).setMap(map); 
 	  }
-}
 
-function getHeatMap(data){
-	flag="heat";
-  var points = getPoints(data);
-    heatmap = new google.maps.visualization.HeatmapLayer({
-	     data: points,
-	      map: map
+};
+
+
+function getSentimentColor(sentiment){
+	var color=b_default;
+	if (sentiment == "negative") {
+		color=r_negative;
+	} else if (sentiment == "positive") {
+		color = g_positive;
+	} else if (sentiment == "neutral") {
+		color = y_neutral
+	}
+	return color;
+};
+
+
+function getHeatMap(){
+	flag = "heat";
+
+	heatmap = new google.maps.visualization.HeatmapLayer({
+	    data: getPoints(tweetDataJS),
+	    map: map
 	  });
-}
+};
+
 
 function toggleHeatmap() {
-      heatmap.setMap(heatmap.getMap() ? null : map);
-      if (!heatmap.map) {
-          DeletePoints();
-          getPointsMap();
-      }
+	if (flag == "heat") {
+		 heatmap.setMap(null);
+		 getPointsMap();
+	 } else if (flag="points") {
+		 DeletePoints();
+		 getHeatMap();
+	 }
 };
 
 function DeletePoints() {
-    //Loop through all the markers and remove
-    for (var i = 0; i < circles.length; i++) {
-    	circles[i].setMap(null);
-    }
-
-    circles = [];
+    $('.tweet-point').remove();
 };
 
 function changeGradient() {
@@ -253,46 +354,139 @@ function getPoints(data) {
   });
 };
 
+function getSentiment(data){
+	return data.map(function(tweet) {
+	     return tweet['sentiment'];
+	});
+}
+
 function requestData() {
   window.setInterval(function() {
-  	//alert("real time update");
-    $.getJSON('MainServlet', function(data) {
+  	// alert("real time update");
+  	var e = document.getElementById("category");
+	var key = e.options[e.selectedIndex].value;
+	
+    $.getJSON('MainServlet',{
+        category:key
+    },  function(data) {
+      // update local data;
+      tweetDataJS = data;
       updateCounter(data);
-       if(flag=="heat") {
-         //TODO: update points in heatmap
-          if (heatmap && typeof heatmap.setMap === 'function') {
-            heatmap.setMap(null);
-          }
-          getHeatMap(data);
-       } else if(flag=="points") {
-         //TODO: update points in heatmap
-         DeletePoints();
-         getPointsMap(data);
-       }
-
-       populateSideBar(data);
+     
+      if (flag == "heat") {
+        // update points in heatmap
+        if (heatmap && typeof heatmap.setMap === 'function') {
+          heatmap.setMap(null);
+         }
+         getHeatMap();
+      } else if (flag == "points") {
+        // update points in heatmap
+        DeletePoints();
+        getPointsMap();
+      }
+     
+     populateSideBar(data);
+     
    });
+  }, 30000);
+}; 
 
-  }, 3000);
+function initializeData() {
+	  $.getJSON('MainServlet', function(data) {
+	      // Update local data.
+	      tweetDataJS = data;
+	      updateCounter(data);
+	     
+	       if (flag == "heat") {
+	         // Update points in heatmap.
+	         if (heatmap && typeof heatmap.setMap === 'function') {
+	           heatmap.setMap(null);
+	          }
+	          getHeatMap();
+	       } else if (flag == "points") {
+	         // Update points in heatmap.
+	         DeletePoints();
+	         getPointsMap();
+	       }
+	      populateSideBar(data);
+	  });
+};
+
+function getCategoy(category) {
+    var key = category.value;  
+    // document.write(key);
+    $.getJSON('MainServlet',{
+         category:key
+       },  function(data) {
+        // Update local data.
+        tweetDataJS = data;
+        updateCounter(data);
+       
+         if (flag == "heat") {
+           // Update points in heatmap.
+           if (heatmap && typeof heatmap.setMap === 'function') {
+              heatmap.setMap(null);
+            }
+            getHeatMap();
+         } else if (flag == "points") {
+           // Update points in heatmap.
+           DeletePoints();
+           getPointsMap();
+         }
+         populateSideBar(data);
+     });
 };
 
 function updateCounter(data) {
-  document.getElementById("Counter").innerHTML=data.length;
+  document.getElementById("Counter").innerHTML = data.length;
 };
 
-// Sidebar
 function populateSideBar(data) {
   $('.side-bar').empty();
-  for (var i=0; i<=10; i++) {
+  for (var i = 0; i <= 10; i++) {
+	  var tweet = data[i];
+	  var parsedContent = wrapLinks(tweet['content']);
       $('.side-bar').append(
-        '<div>' + data[i]['content'] + '</div><hr>'
+    	'<div class="user-tweet">' +
+	    	'<div class="user-created">' + tweet['createdstr'] +  '</div>' +
+        	'<div class="user-created"> (' + tweet['lat'] + ', ' +  tweet['lng'] + ') </div>' +
+	    	'<div class="user-name">' + tweet['username'] + '</div>' +
+        	'<div class="user-content">' + parsedContent + '</div>' +
+        	'<div class="user-sentiment ' + tweet['sentiment'] + '">' + tweet['sentiment'] +
+        	', ' + tweet['category'] + '</div>' +
+       	'</div>'
       );
   }
 };
 
+function wrapLinks(content) {
+	return content.replace(		
+			/(?:(https?\:\/\/[^\s]+))/m,
+			'<a target="_blank" href="$1">$1</a>');	
+}
+
+$('.side-bar-toggle').on('click', function() {
+	$('.map-container').toggleClass('active');
+	$('.side-bar-container').toggleClass('active');
+	$('.side-bar-container .arrow').toggleClass('closed');
+	google.maps.event.trigger(map, 'resize');
+});
+
+$('body').on('click', '.tweet-point', function() {
+	var content = $(this).data('content');
+	var user = $(this).data('user');
+	$('.fade-bg, .lightbox').fadeIn();
+	$('.lightbox .user').text(user);
+	$('.lightbox .tweet').html(wrapLinks(content));
+});
+
+$('.fade-bg').click(function() {
+	$(this).fadeOut();
+	$('.lightbox').fadeOut();
+});
     </script>
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAYAptnpHlY5oYzYwUz_lPE3RyIrR5cJpU&signed_in=true&libraries=visualization&callback=initMap">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAYAptnpHlY5oYzYwUz_lPE3RyIrR5cJpU&signed_in=true&libraries=visualization&callback=loadRichMarker">
     </script>
   </body>
 </html>
