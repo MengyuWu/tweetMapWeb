@@ -1,6 +1,7 @@
 
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -105,13 +106,18 @@ public class receieveSNS extends HttpServlet {
 			// Convert object to JSON format.
 			String json = new Gson().toJson(tweets);
 			req.setAttribute("newTweet", json);
-			//req.setCharacterEncoding("UTF-8");
-			//resp.setContentType("application/json");
-			//resp.setCharacterEncoding("UTF-8");
-			//resp.getWriter().write(json);
-			
+	        
+	        //encoding must be set to UTF-8
+	        resp.setCharacterEncoding("UTF-8");
+	        //content type must be set to text/event-stream
+	        resp.setContentType("text/event-stream");
+	 
+	        PrintWriter writer = resp.getWriter();
+	        writer.write("event: new_tweet\n");        	 
+	        writer.write("data: " + json + "\n\n");
+	        writer.close();
+	        
 			req.getRequestDispatcher("realtime.jsp").forward(req, resp);
-			
 			
 			
 		}else if(messagetype.equals("SubscriptionConfirmation")){
