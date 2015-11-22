@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/j2ee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/j2ee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
   <display-name>tweetMapWeb</display-name>
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>
@@ -18,5 +18,35 @@
   <servlet-mapping>
     <servlet-name>MainServlet</servlet-name>
     <url-pattern>/MainServlet</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>SNSdemo</display-name>
+    <servlet-name>SNSdemo</servlet-name>
+    <servlet-class>SNSdemo</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>SNSdemo</servlet-name>
+    <url-pattern>/SNSdemo</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>MyHttpPostListener</display-name>
+    <servlet-name>MyHttpPostListener</servlet-name>
+    <servlet-class>MyHttpPostListener</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>MyHttpPostListener</servlet-name>
+    <url-pattern>/MyHttpPostListener</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>receieveSNS</display-name>
+    <servlet-name>receieveSNS</servlet-name>
+    <servlet-class>receieveSNS</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>receieveSNS</servlet-name>
+    <url-pattern>/receieveSNS</url-pattern>
   </servlet-mapping>
 </web-app>
