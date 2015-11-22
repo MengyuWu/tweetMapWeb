@@ -182,13 +182,24 @@
   </head>
 
   <body>
-
-    <div id="newTweet">
-      <pre>
-        newTweet: ${newTweet}
-      </pre>
-    </div>
-    
+    new tweet: <span id="tweet"></span>
+    <br><br>
+    <button onclick="start()">Start</button>
+ 
+    <script type="text/javascript">
+    function start() {
+ 
+        var eventSource = new EventSource("receieveSNS");
+         
+        eventSource.onmessage = function(event) {
+         
+            document.getElementById('tweet').innerHTML = event.data;
+         
+        };
+         
+    }
+    </script>
+  
   	<div class="map-container">
 	    <div id="floating-panel">
 	      <button onclick="toggleHeatmap()">Toggle Heatmap</button>
@@ -233,6 +244,7 @@ var circles = [];
 var flag = "heat";
 var tweetDataJS;
 
+
 // color
 var b_default="#0000FF";
 var r_negative="#FF0000";
@@ -264,47 +276,7 @@ function initMap() {
 	data: getPoints([]),
     map: map
   });
-  
-  var eventSource = new EventSource("receieveSNS");
-  eventSource.addEventListener('new_tweet', function(event) {
-      tweet = event.data;
-	  document.getElementById('newTweet').innerHTML = tweet;
-      
-	  addMarker(tweet);
-	  addToSideBar(tweet);
-  });
-
 }
-
-function addMarker(tweet){
-  position = new google.maps.LatLng(
-          tweet['lat'],
-          tweet['lng']
-      );
-  sentiment = tweet['sentiment'];
-  var color = getSentimentColor(sentiment);
-  var marker = new RichMarker({
-      position: position,
-      map: map,
-      shadow: 'none',
-      content: '<div class="tweet-point" data-user="' + tweet['username'] +
-      '" data-content="' + tweet['content'].replace('"', '\"') + '" style="background:' + color + '"></div>'
-  }).setMap(map); 
-};
-
-function addToSideBar(tweet) {
-	  var parsedContent = wrapLinks(tweet['content']);
-      $('.side-bar').prepend(
-    	'<div class="user-tweet">' +
-	    	'<div class="user-created">' + tweet['createdstr'] +  '</div>' +
-        	'<div class="user-created"> (' + tweet['lat'] + ', ' +  tweet['lng'] + ') </div>' +
-	    	'<div class="user-name">' + tweet['username'] + '</div>' +
-        	'<div class="user-content">' + parsedContent + '</div>' +
-        	'<div class="user-sentiment ' + tweet['sentiment'] + '">' + tweet['sentiment'] +
-        	', ' + tweet['category'] + '</div>' +
-       	'</div>'
-      );
-};
 
 
 function getPointsMap(){
@@ -325,6 +297,7 @@ function getPointsMap(){
 	  }
 
 };
+
 
 
 function getSentimentColor(sentiment){
@@ -435,7 +408,7 @@ function requestData() {
      populateSideBar(data);
      
    });
-  }, 30000);
+  }, 300000);
 }; 
 
 function initializeData() {
