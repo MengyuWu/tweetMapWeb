@@ -192,8 +192,11 @@
         var eventSource = new EventSource("receieveSNS");
          
         eventSource.onmessage = function(event) {
-         
+        	console.log(event);
             document.getElementById('tweet').innerHTML = event.data;
+        	var tweet = (JSON.parse(event.data))[0];
+            addMarker(tweet);
+            addToSideBar(tweet);
          
         };
          
@@ -484,6 +487,36 @@ function wrapLinks(content) {
 			/(?:(https?\:\/\/[^\s]+))/m,
 			'<a target="_blank" href="$1">$1</a>');	
 }
+
+function addMarker(tweet){
+  position = new google.maps.LatLng(
+          tweet['lat'],
+          tweet['lng']
+      );
+  sentiment = tweet['sentiment'];
+  var color = getSentimentColor(sentiment);
+  var marker = new RichMarker({
+      position: position,
+      map: map,
+      shadow: 'none',
+      content: '<div class="tweet-point" data-user="' + tweet['username'] +
+      '" data-content="' + tweet['content'].replace('"', '\"') + '" style="background:' + color + '"></div>'
+  }).setMap(map); 
+};
+
+function addToSideBar(tweet) {
+  var parsedContent = wrapLinks(tweet['content']);
+     $('.side-bar').prepend(
+   	'<div class="user-tweet">' +
+    	'<div class="user-created">' + tweet['createdstr'] +  '</div>' +
+       	'<div class="user-created"> (' + tweet['lat'] + ', ' +  tweet['lng'] + ') </div>' +
+    	'<div class="user-name">' + tweet['username'] + '</div>' +
+       	'<div class="user-content">' + parsedContent + '</div>' +
+       	'<div class="user-sentiment ' + tweet['sentiment'] + '">' + tweet['sentiment'] +
+       	', ' + tweet['category'] + '</div>' +
+      	'</div>'
+     );
+};
 
 $('.side-bar-toggle').on('click', function() {
 	$('.map-container').toggleClass('active');

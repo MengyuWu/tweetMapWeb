@@ -51,7 +51,7 @@ public class receieveSNS extends HttpServlet {
 	 
 	     PrintWriter writer = response.getWriter();
 	     if(!test.equals("")){
-	    	 writer.write("data: "+ test+ " time:"+System.currentTimeMillis() +"\n\n");
+	    	 writer.write("data: "+ test+ "\n\n");
 	     }
 	     
 	     while(!tweetQueue.isEmpty()){
