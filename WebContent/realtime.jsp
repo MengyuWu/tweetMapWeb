@@ -244,7 +244,7 @@
 var map, heatmap, pointsmap;
 var markers = [];
 var circles = [];
-var flag = "heat";
+var flag = "points";
 var tweetDataJS;
 
 
