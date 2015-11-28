@@ -110,16 +110,16 @@
       }
       .side-bar-toggle .arrow {
       	width: 100%;
-    	-webkit-transform: rotate(180deg);
-      	-moz-transform: rotate(180deg);
-      	-ms-transform: rotate(180deg);
-      	transform: rotate(180deg);
-      }
-      .side-bar-toggle .arrow.closed {
-		-webkit-transform: rotate(0deg);
+    	-webkit-transform: rotate(0deg);
       	-moz-transform: rotate(0deg);
       	-ms-transform: rotate(0deg);
       	transform: rotate(0deg);
+      }
+      .side-bar-toggle .arrow.closed {
+		-webkit-transform: rotate(180deg);
+      	-moz-transform: rotate(180deg);
+      	-ms-transform: rotate(180deg);
+      	transform: rotate(180deg);
       }
       .user-tweet {
       	border-bottom: 1px solid #ccc;
@@ -294,7 +294,7 @@
   	</div>
    	<div class="side-bar-container">
    		<div class="side-bar-toggle">
-   			<img class="arrow" src="http://weareplrl.com/images/arrow-92-256.png" />
+   			<img class="arrow" src="${pageContext.request.contextPath}/images/right-arrow.png" />
    		</div>
    		<div class="side-bar"></div>
    	</div>
