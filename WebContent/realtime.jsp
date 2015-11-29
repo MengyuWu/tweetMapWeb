@@ -307,6 +307,7 @@
 		</div>
 	</div>
    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+   <script type="text/javascript" src="${pageContext.request.contextPath}/mapstyle.js"></script>
    <script>
 
 //global valuable;
@@ -335,7 +336,8 @@ function initMap() {
   var mapProp = {
 		  center:{lat: 37.775, lng: -122.434},
 		  zoom:2,
-		  mapTypeId:google.maps.MapTypeId.ROADMAP
+		  mapTypeId:google.maps.MapTypeId.ROADMAP,
+		  styles:mapStyle
   };
   
   map = new google.maps.Map(document.getElementById('map'), mapProp);
