@@ -141,14 +141,14 @@
         font-size: 10px;
         color: #4099FF;
       }
-      .user-sentiment.positive {
+      .user-sentiment.positive, .user-tweet .user-sentiment.positive {
       	color: green;
       }
-      .user-sentiment.negative {
+      .user-sentiment.negative, .user-tweet .user-sentiment.negative {
       	color: red;
       }
-      .user-sentiment.neutral {
-      	color: blue;
+      .user-sentiment.neutral, .user-tweet .user-sentiment.neutral {
+      	color: #FFCC00;
       }
       .fade-bg {
       	background: rgba(0,0,0,0.3);
@@ -285,6 +285,7 @@
 		<div class="lightbox-tweet">
 			<h2 class="user"></h2>
 			<div class="tweet"></div>
+			<div class="user-sentiment"></div> 
 		</div>
 	</div>
    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
@@ -361,7 +362,12 @@ function getPointsMap(){
               map: map,
               shadow: 'none',
               content: '<div class="tweet-point" data-user="' + tweetDataJS[i]['username'] +
-              '" data-content="' + tweetDataJS[i]['content'].replace('"', '\"') + '" style="background:' + color + '"></div>'
+              '" data-content="' + tweetDataJS[i]['content'].replace('"', '\"') +
+              '" data-created="' + tweetDataJS[i]['createdstr'] + 
+              '" data-geoloc="' + 'at (' + Math.round(tweetDataJS[i]['lat']) + ', ' + Math.round(tweetDataJS[i]['lng']) + ')' +
+              '" data-sentiment="' + tweetDataJS[i]['sentiment'] + 
+              '" data-category="' + tweetDataJS[i]['category'] + 
+              '" style="background:' + color + '"></div>'
           }).setMap(map); 
 	  }
 
@@ -370,9 +376,9 @@ function getPointsMap(){
 
 
 function getSentimentColor(sentiment){
-	var color=b_default;
+	var color = b_default;
 	if (sentiment == "negative") {
-		color=r_negative;
+		color = r_negative;
 	} else if (sentiment == "positive") {
 		color = g_positive;
 	} else if (sentiment == "neutral") {
@@ -488,12 +494,11 @@ function populateSideBar(data) {
 	  var parsedContent = wrapLinks(tweet['content']);
       $('.side-bar').append(
     	'<div class="user-tweet">' +
-	    	'<div class="user-created">' + tweet['createdstr'] +  '</div>' +
-        	'<div class="user-created"> (' + tweet['lat'] + ', ' +  tweet['lng'] + ') </div>' +
+	    	'<div class="user-created">' + tweet['createdstr'] + ' · at (' + Math.round(tweet['lat']) + ', ' +  Math.round(tweet['lng']) + ') </div>' +
 	    	'<div class="user-name">' + tweet['username'] + '</div>' +
         	'<div class="user-content">' + parsedContent + '</div>' +
         	'<div class="user-sentiment ' + tweet['sentiment'] + '">' + tweet['sentiment'] +
-        	', ' + tweet['category'] + '</div>' +
+        	' · ' + tweet['category'] + '</div>' +
        	'</div>'
       );
   }
@@ -545,9 +550,14 @@ $('.side-bar-toggle').on('click', function() {
 $('body').on('click', '.tweet-point', function() {
 	var content = $(this).data('content');
 	var user = $(this).data('user');
+	var created = $(this).data('created');
+	var geoloc = $(this).data('geoloc');
+	var sentiment = $(this).data('sentiment');
+	var category = $(this).data('category');
 	$('.fade-bg, .lightbox').fadeIn();
-	$('.lightbox .user').text(user);
-	$('.lightbox .tweet').html(wrapLinks(content));
+	$('.lightbox .user').text(user + " · " + created + " · " + geoloc);
+	$('.lightbox .tweet').html(wrapLinks(content) + "\n");
+	$('.lightbox .user-sentiment').removeClass("positive negative neutral").addClass(sentiment).text(sentiment + " · " + category);
 });
 
 $('.fade-bg').click(function() {
