@@ -124,9 +124,8 @@ public class receieveSNS extends HttpServlet {
 				tweetHM.put("username", username);
 				tweetHM.put("category", categorydb);
 				tweetHM.put("sentiment", sentiment);
-				tweets.add(tweetHM);
 				// Convert object to JSON format.
-				String json = new Gson().toJson(tweets);
+				String json = new Gson().toJson(tweetHM);
 				System.out.println("json:"+json);
 				//put into the queue
 				tweetQueue.add(json);

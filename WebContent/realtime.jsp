@@ -251,35 +251,15 @@
   </head>
 
   <body>
-    new tweet: <span id="tweet"></span>
-    <br><br>
-    <button onclick="start()">Start</button>
- 
-    <script type="text/javascript">
-    function start() {
- 
-        var eventSource = new EventSource("receieveSNS");
-         
-        eventSource.onmessage = function(event) {
-        	console.log(event);
-            document.getElementById('tweet').innerHTML = event.data;
-        	var tweet = (JSON.parse(event.data))[0];
-            addMarker(tweet);
-            addToSideBar(tweet);
-         
-        };
-         
-    }
-    </script>
   
   	<div class="map-container">
 	    <div id="floating-panel">
-	      <button onclick="toggleHeatmap()">Toggle Heatmap</button>
+	      <button onclick="toggleHeatmap()">Toggle heatmap</button>
 	      <button onclick="changeGradient()">Change gradient</button>
 	      <button onclick="changeRadius()">Change radius</button>
 	      <button onclick="changeOpacity()">Change opacity</button>
 	      
-	      <select id="category" onchange="getCategoy(this)">
+	      <select id="category" onchange="requestData()">
 	      <option value="">All</option>
 		  <option value="recreation">recreation</option>
 		  <option value="science">science_technology</option>
@@ -287,6 +267,7 @@
 		  <option value="arts">arts_entertainment</option>
 		  <option value="business">business</option>
 		  </select>
+		  		  
 	      <div> Total Tweets: <span id="Counter">0</span></div>
 	    </div>
 	
@@ -331,7 +312,8 @@ function loadRichMarker() {
 
 function initMap() {
 	
-  initializeData();
+  requestData();
+  startEventListening();
   
   var mapProp = {
 		  center:{lat: 37.775, lng: -122.434},
@@ -341,15 +323,28 @@ function initMap() {
   };
   
   map = new google.maps.Map(document.getElementById('map'), mapProp);
-
-     google.maps.event.addListenerOnce(map, 'idle', function(){
-      requestData();
-  });
-       
+            
   heatmap = new google.maps.visualization.HeatmapLayer({
 	data: getPoints([]),
     map: map
   });
+}
+
+function startEventListening() {
+	 
+    var eventSource = new EventSource("receieveSNS");
+     
+    eventSource.onmessage = function(event) {
+    	console.log(event);
+    	var tweet = (JSON.parse(event.data));
+    	// Avoid duplicated tweets
+    	if (tweet['content'] != tweetDataJS[0]['content']) {
+	    	tweetDataJS.unshift(tweet);
+	        addMarker(tweet);
+	        addToSideBar(tweet);
+	    }
+    };
+     
 }
 
 
@@ -402,12 +397,12 @@ function toggleHeatmap() {
 		 heatmap.setMap(null);
 		 getPointsMap();
 	 } else if (flag="points") {
-		 DeletePoints();
+		 deletePoints();
 		 getHeatMap();
 	 }
 };
 
-function DeletePoints() {
+function deletePoints() {
     $('.tweet-point').remove();
 };
 
@@ -455,8 +450,6 @@ function getSentiment(data){
 }
 
 function requestData() {
-  window.setInterval(function() {
-  	// alert("real time update");
   	var e = document.getElementById("category");
 	var key = e.options[e.selectedIndex].value;
 	
@@ -471,65 +464,18 @@ function requestData() {
         // update points in heatmap
         if (heatmap && typeof heatmap.setMap === 'function') {
           heatmap.setMap(null);
-         }
-         getHeatMap();
+        }
+        getHeatMap();
       } else if (flag == "points") {
         // update points in heatmap
-        DeletePoints();
+        deletePoints();
         getPointsMap();
       }
      
      populateSideBar(data);
      
    });
-  }, 300000);
 }; 
-
-function initializeData() {
-	  $.getJSON('MainServlet', function(data) {
-	      // Update local data.
-	      tweetDataJS = data;
-	      updateCounter(data);
-	     
-	       if (flag == "heat") {
-	         // Update points in heatmap.
-	         if (heatmap && typeof heatmap.setMap === 'function') {
-	           heatmap.setMap(null);
-	          }
-	          getHeatMap();
-	       } else if (flag == "points") {
-	         // Update points in heatmap.
-	         DeletePoints();
-	         getPointsMap();
-	       }
-	      populateSideBar(data);
-	  });
-};
-
-function getCategoy(category) {
-    var key = category.value;  
-    // document.write(key);
-    $.getJSON('MainServlet',{
-         category:key
-       },  function(data) {
-        // Update local data.
-        tweetDataJS = data;
-        updateCounter(data);
-       
-         if (flag == "heat") {
-           // Update points in heatmap.
-           if (heatmap && typeof heatmap.setMap === 'function') {
-              heatmap.setMap(null);
-            }
-            getHeatMap();
-         } else if (flag == "points") {
-           // Update points in heatmap.
-           DeletePoints();
-           getPointsMap();
-         }
-         populateSideBar(data);
-     });
-};
 
 function updateCounter(data) {
   document.getElementById("Counter").innerHTML = data.length;
