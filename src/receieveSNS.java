@@ -3,7 +3,11 @@
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -61,7 +65,6 @@ public class receieveSNS extends HttpServlet {
 	    	 try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 	     }
@@ -108,14 +111,20 @@ public class receieveSNS extends HttpServlet {
 				
 				// Create tweet hash.
 				double latD=tweet.getGeoLat();
+				String lat=Double.toString(latD);
 				double lngD=tweet.getGeoLng();
+				String lng=Double.toString(lngD);
 				String content=tweet.getContent();
 				String username=tweet.getUsername();
 				String categorydb=tweet.getCategory();
 				String sentiment=tweet.getSentiment();
-				
-				String lat=Double.toString(latD);
-				String lng=Double.toString(lngD);
+				Long createdL=tweet.getCreatedLong();
+				String created=Long.toString(createdL);
+				Date date=tweet.getCreatedDate();
+				// Format date.
+			    DateFormat toFormat = new SimpleDateFormat("MMM dd · k:mm z");
+			    String createdstr = toFormat.format(date);
+	
 				ArrayList<HashMap<String,String>> tweets = new ArrayList<HashMap<String,String>>();
 				HashMap<String,String> tweetHM = new HashMap<String,String>();
 				tweetHM.put("lat", lat);
@@ -124,6 +133,9 @@ public class receieveSNS extends HttpServlet {
 				tweetHM.put("username", username);
 				tweetHM.put("category", categorydb);
 				tweetHM.put("sentiment", sentiment);
+				tweetHM.put("created", created);
+				tweetHM.put("createdstr", createdstr);
+				
 				// Convert object to JSON format.
 				String json = new Gson().toJson(tweetHM);
 				System.out.println("json:"+json);

@@ -135,50 +135,49 @@ public class MainServlet extends HttpServlet {
 		
 		for (int i = 0; i < size; i++) {
 			// Get latitude, longitude, content, username, created (long), category, sentiment
-			String lat = scanResult.getItems().get(i).get("geoLat").getN();
-			String lng = scanResult.getItems().get(i).get("geoLng").getN();
-			String content = scanResult.getItems().get(i).get("content").getS();
-			String username = scanResult.getItems().get(i).get("username").getS();
-			String created = scanResult.getItems().get(i).get("createdLong").getN();
-			String createdDate = scanResult.getItems().get(i).get("createdDate").getS();
 			String categorydb = "no category";
 			if (scanResult.getItems().get(i).get("category") != null) {
 				categorydb = scanResult.getItems().get(i).get("category").getS();
+				String lat = scanResult.getItems().get(i).get("geoLat").getN();
+				String lng = scanResult.getItems().get(i).get("geoLng").getN();
+				String content = scanResult.getItems().get(i).get("content").getS();
+				String username = scanResult.getItems().get(i).get("username").getS();
+				String created = scanResult.getItems().get(i).get("createdLong").getN();
+				String createdDate = scanResult.getItems().get(i).get("createdDate").getS();
+				String sentiment = "no sentiment";
+				if (scanResult.getItems().get(i).get("sentiment") != null) {
+				    sentiment = scanResult.getItems().get(i).get("sentiment").getS();
+				}
+				// Format date.
+			    DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+			    DateFormat toFormat = new SimpleDateFormat("MMM dd · k:mm z");
+			    Date date;
+			    String createdstr;
+				try {
+					date = fromFormat.parse(createdDate);
+				    createdstr = toFormat.format(date);
+				} catch (ParseException e) {
+					createdstr = createdDate;
+				}
+				
+				// Create tweet hash.
+				HashMap<String,String> tweet = new HashMap<String,String>();
+				tweet.put("lat", lat);
+				tweet.put("lng", lng);
+				tweet.put("content", content);
+				tweet.put("username", username);
+				tweet.put("category", categorydb);
+				tweet.put("sentiment", sentiment);
+				tweet.put("created", created);
+				tweet.put("createdstr", createdstr);
+				
+				// Order tweet by time created. Most recent at the top of the list.
+				int position = 0;
+				while (position < tweets.size() && Long.parseLong(tweets.get(position).get("created")) > Long.parseLong(created)) {
+					position++;
+				}	
+				tweets.add(position, tweet);
 			}
-			String sentiment = "no sentiment";
-			if (scanResult.getItems().get(i).get("sentiment") != null) {
-			    sentiment = scanResult.getItems().get(i).get("sentiment").getS();
-			}
-			
-			// Format date.
-		    DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-		    DateFormat toFormat = new SimpleDateFormat("kk:mm:ss z EEE MM/dd/yyyy");
-		    Date date;
-		    String createdstr;
-			try {
-				date = fromFormat.parse(createdDate);
-			    createdstr = toFormat.format(date);
-			} catch (ParseException e) {
-				createdstr = createdDate;
-			}
-			
-			// Create tweet hash.
-			HashMap<String,String> tweet = new HashMap<String,String>();
-			tweet.put("lat", lat);
-			tweet.put("lng", lng);
-			tweet.put("content", content);
-			tweet.put("username", username);
-			tweet.put("category", categorydb);
-			tweet.put("sentiment", sentiment);
-			tweet.put("created", created);
-			tweet.put("createdstr", createdstr);
-			
-			// Order tweet by time created. Most recent at the top of the list.
-			int position = 0;
-			while (position < tweets.size() && Long.parseLong(tweets.get(position).get("created")) > Long.parseLong(created)) {
-				position++;
-			}	
-			tweets.add(position, tweet);
 			
 		}
 		
