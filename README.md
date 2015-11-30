@@ -1,5 +1,6 @@
 # TweetMapWeb
 
+[!screenshot](screenshot.png)
 
 ## How to run this project locally:
 1. Clone [tweetMapWeb](https://github.com/MengyuWu/tweetMapWeb) and [tweetBasic](https://github.com/MengyuWu/tweetBasic).
@@ -25,11 +26,12 @@
 8. Go to tweetBasic / AWSResourceSetup.java and change S3_BUCKET_NAME, DYNAMODB_TABLE_NAME to your desired bucket and table names.
 9. Go to tweetBasic / Tweet.java and change DYNAMODB_TABLE_NAME to the one you used in the previous step.
 10. Go to [AlchemyAPI](http://www.alchemyapi.com/api/register.html) to get an API key. Then add api_key.txt containing your secret key to the root directory of tweetBasic.
-10. Run tweetBasic / `AWSResourceSetup.java` as a Java project to set up your resources.
-11. Run tweetBasic / `Tweet.java` as Java project to set up tweet model.
-12. Run tweetBasic / `GetTweet.java` as a Java project to get tweets from the Twitter Stream API. Let it run for a while to get more Twitter data. Note that Alchemy API only allows 1,000 requests per day, and we do not store tweets that are missing geolocation details or are written in unsupported languages by Alchemy API. Under these restrictions, we can only get about 350 Tweets per day on average.
+10. Run tweetBasic / `AWSResourceSetup.java` as a Java application to set up your resources.
+11. Run tweetBasic / `Tweet.java` as Java application to set up tweet model.
+12. Run tweetBasic / `GetTweet.java` as a Java application to get tweets from the Twitter Stream API. Let it run for a while to get more Twitter data. The tweets will be saved to DynamoDB and sent to SQS for further processing.
+13. Run tweetBasic / `Worker.java` as a Java application so the worker pool can begin running analyzing the sentiment and categories of the unprocessed tweets in the SQS queue. Note that Alchemy API only allows 1,000 requests per day, and we do not store tweets that are missing geolocation details or are written in unsupported languages by Alchemy API.
 13. Run tweetMapWeb / `realtime.jsp` and right click Run as / Run on server. Define a new Tomcat 7 web server if necessary.
-14. Now you should be able to visit the link locally on your browser too.
+14. Now you should be able to visit the EBS link on your browser too. Note that to have streaming tweets come in, `GetTweet` and `Worker` must both be running locally. Enjoy!
 
 ## How to deploy to Elastic Beanstalk and use Elastic LoadBalancing
 ### Using AWS Toolkit in Eclipse
