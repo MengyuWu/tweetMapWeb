@@ -2,11 +2,8 @@
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URL;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -127,7 +124,6 @@ public class receieveSNS extends HttpServlet {
 			    DateFormat toFormat = new SimpleDateFormat("MMM dd · k:mm z");
 			    String createdstr = toFormat.format(date);
 	
-				ArrayList<HashMap<String,String>> tweets = new ArrayList<HashMap<String,String>>();
 				HashMap<String,String> tweetHM = new HashMap<String,String>();
 				tweetHM.put("lat", lat);
 				tweetHM.put("lng", lng);
