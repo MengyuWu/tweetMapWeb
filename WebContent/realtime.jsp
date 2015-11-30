@@ -532,7 +532,7 @@ function populateSideBar(data) {
 
 function wrapLinks(content) {
 	return content.replace(		
-			/(?:(https?\:\/\/[^\s]+))/m,
+			/(?:(https?\:\/\/[^\s]+))/g,
 			'<a target="_blank" href="$1">$1</a>');	
 }
 
