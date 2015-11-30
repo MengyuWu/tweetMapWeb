@@ -21,20 +21,20 @@ import twitter4j.conf.ConfigurationBuilder;
  */
 public class TrendsServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
+	private static ResponseList<Location> locations;
        
     /**
      * @see HttpServlet#HttpServlet()
      */
     public TrendsServlet() {
         super();
-        // TODO Auto-generated constructor stub
+        getLocationIds();
     }
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
 		String place = request.getParameter("place");
 		String[] trends = getTrends(place);
 
@@ -52,10 +52,7 @@ public class TrendsServlet extends HttpServlet {
 		doGet(request, response);
 	}
 	
-    private static Integer getTrendLocationId(String locationName) {
-
-	    int idTrendLocation = 0;
-	
+    private static void getLocationIds() {
 	    try {
 	
 	    	ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -68,29 +65,29 @@ public class TrendsServlet extends HttpServlet {
 	        TwitterFactory tf = new TwitterFactory(cb.build());
 	        Twitter twitter = tf.getInstance();
 	
-	        ResponseList<Location> locations;
 	        locations = twitter.getAvailableTrends();
 	        
-	
-	        for (Location location : locations) {
-		        if (location.getName().toLowerCase().equals(locationName.toLowerCase())) {
-		            idTrendLocation = location.getWoeid();
-		            break;
-		        }
-	        }
-	
-	        if (idTrendLocation > 0) {
-	        	return idTrendLocation;
-	        }
-	
-	        return null;
-	
 	    } catch (TwitterException te) {
 	        te.printStackTrace();
 	        System.out.println("Failed to get trends: " + te.getMessage());
-	        return null;
 	    }
 
+    }
+    
+    private static Integer getTrendLocationId(String locationName) {
+	    int idTrendLocation = 0;
+        for (Location location : locations) {
+	        if (location.getName().toLowerCase().equals(locationName.toLowerCase())) {
+	            idTrendLocation = location.getWoeid();
+	            break;
+	        }
+        }
+
+        if (idTrendLocation > 0) {
+        	return idTrendLocation;
+        }
+
+        return null;
     }
     
     private static String[] getTrends(String trendLocation) {
@@ -106,14 +103,11 @@ public class TrendsServlet extends HttpServlet {
 			TwitterFactory tf = new TwitterFactory(cb.build());
 	        Twitter twitter = tf.getInstance();
 	
-	        ResponseList<Location> locations;
-	        locations = twitter.getAvailableTrends();
-	
 	        Integer idTrendLocation = getTrendLocationId(trendLocation);
 	
 	        if (idTrendLocation == null) {
 	        	System.out.println("Trend Location Not Found");
-	        	System.exit(0);
+	        	return null;
 	        }
 	
 	        Trends trends = twitter.getPlaceTrends(idTrendLocation);
