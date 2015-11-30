@@ -1,6 +1,11 @@
 
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -22,6 +27,7 @@ import twitter4j.conf.ConfigurationBuilder;
 public class TrendsServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static ResponseList<Location> locations;
+	// private static HashMap<String,String[]> cachedTrends;
        
     /**
      * @see HttpServlet#HttpServlet()
@@ -35,11 +41,27 @@ public class TrendsServlet extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// Get place
 		String place = request.getParameter("place");
-		String[] trends = getTrends(place);
+		// Get current date and time
+		Date date = new Date();
+	    DateFormat toFormat = new SimpleDateFormat("MMM dd · k:mm z");
+	    String time = toFormat.format(date);
+	    // Get top 10 trends
+		String[] keywords = getTrends(place);
+		String trends = "";
+		for (String s : keywords) {
+		    trends += s + ",";
+		}
+		
+		// Add to hashmap
+		HashMap<String,String> trendingInfo = new HashMap<String,String>();
+		trendingInfo.put("trends", trends);
+		trendingInfo.put("place", place);
+		trendingInfo.put("time", time);
 
 		// Convert object to JSON format.
-		String json = new Gson().toJson(trends);
+		String json = new Gson().toJson(trendingInfo);
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
 		response.getWriter().write(json);
@@ -119,6 +141,8 @@ public class TrendsServlet extends HttpServlet {
 	        	keywords[i] = trend;
 	        	System.out.println(trend);
 	        }
+	        
+	        // cachedTrends.put(trendLocation, keywords);
 	        	        
 	        return keywords;
 	
