@@ -261,7 +261,8 @@
 	      <button onclick="changeGradient()">Change gradient</button>
 	      <button onclick="changeRadius()">Change radius</button>
 	      <button onclick="changeOpacity()">Change opacity</button>
-	      
+	      <div class="drop-downs">
+	      Category: 
 	      <select id="category" onchange="requestData()">
 	      <option value="">All</option>
 		  <option value="recreation">recreation</option>
@@ -270,14 +271,14 @@
 		  <option value="arts">arts_entertainment</option>
 		  <option value="business">business</option>
 		  </select>
-		  
+		    Trending in: 
 		  <select id="place" onchange="requestTrends()">
 		  <option value="Worldwide">Worldwide</option>
 		  <option value="New York">New York</option>
 		  <option value="London">London</option>
 		  <option value="Tokyo">Tokyo</option>
 		  </select>
-		  		  
+		  </div>		  
 	      <div> Total Tweets: <span id="Counter">0</span></div>
 	    </div>
 	
@@ -308,6 +309,7 @@ var markers = [];
 var circles = [];
 var flag = "points";
 var tweetDataJS;
+var tweetTrendsJS;
 
 
 // color
@@ -324,7 +326,6 @@ function loadRichMarker() {
 function initMap() {
 	
   requestData();
-  requestTrends();
   startEventListening();
   
   var mapProp = {
@@ -340,6 +341,7 @@ function initMap() {
 	data: getPoints([]),
     map: map
   });
+  
 }
 
 function startEventListening() {
@@ -500,7 +502,9 @@ function requestTrends() {
     $.getJSON('TrendsServlet',{
         place:key
     },  function(data) {
-    	document.getElementById('trends').innerHTML = data;
+    	tweetTrendsJS = data;
+    	document.getElementById('trends').innerHTML = data['place'] + data['time'] + data['trends'];
+    	showTrends();
    });
 };
 
@@ -523,6 +527,7 @@ function populateSideBar(data) {
        	'</div>'
       );
   }
+  requestTrends();
 };
 
 function wrapLinks(content) {
@@ -550,9 +555,8 @@ function addMarker(tweet){
 function addToSideBar(tweet) {
   var parsedContent = wrapLinks(tweet['content']);
      $('.side-bar').prepend(
-   	 '<div class="user-tweet">' +
-    	'<div class="user-created">' + tweet['createdstr'] +  '</div>' +
-       	'<div class="user-created"> (' + tweet['lat'] + ', ' +  tweet['lng'] + ') </div>' +
+   	  '<div class="user-tweet">' +
+ 	    '<div class="user-created">' + tweet['createdstr'] + ' · (' + Math.round(tweet['lat']) + ', ' +  Math.round(tweet['lng']) + ') </div>' +
     	'<div class="user-name">' + tweet['username'] + '</div>' +
        	'<div class="user-content">' + parsedContent + '</div>' +
        	'<div class="user-sentiment ' + tweet['sentiment'] + '">' + tweet['sentiment'] +
@@ -560,6 +564,39 @@ function addToSideBar(tweet) {
       	'</div>'
      );
 };
+
+function showTrends() {
+  	var e = document.getElementById("place");
+	var key = e.options[e.selectedIndex].value;
+	var trendsText = wrapTags(tweetTrendsJS['trends']);
+	var preposition = ' '
+	if (tweetTrendsJS['place'] != 'Worldwide') {
+		preposition = ' in '
+	}
+	
+    $('.side-bar').prepend(
+   	 '<div class="user-tweet">' +
+   	    '<div class="user-created">' + tweetTrendsJS['time'] + '</div>' +
+    	'<div class="user-name"> Trending' + preposition + tweetTrendsJS['place'] + '</div>' +
+       	'<div class="user-content">' + trendsText + '</div>' +
+      	'</div>'
+     );
+};
+
+function wrapTags(trends) {
+	var tags = trends.split(",");
+	var text = '';
+	for (i = 0; i < tags.length; i++) {
+		if (tags[i] != '') {
+			queryUrl = 'https://twitter.com/search/?q='
+			// Replace hashtags with %23 and spaces with %20		
+			queryUrl += tags[i].replace(/#/g,'%23');
+			queryUrl = queryUrl.replace(/ /g, '%20');
+			text += '<a target="_blank" href="' + queryUrl + '">' + tags[i] + '</a><br>';
+		}
+	}
+	return text;
+}
 
 $('.side-bar-toggle').on('click', function() {
 	$('.map-container').toggleClass('active');
