@@ -1,4 +1,5 @@
 import com.amazonaws.services.dynamodbv2.model.*;
+import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
 import com.google.gson.Gson;
 
 import static tweetBasic.AWSResourceSetup.*;
@@ -34,75 +35,11 @@ public class MainServlet extends HttpServlet {
 	       .setOAuthAccessTokenSecret("bKdTWWUVrtg1WtTog65t2XscxdvNbHszxDQLHBpZkutIG");
 	}
 
-//    private static TwitterStream twitterStream = new TwitterStreamFactory(cb.build()).getInstance();
-
     /**
      * @see HttpServlet#HttpServlet()
      */
     public MainServlet() {
-//        super();
-//        // TODO Auto-generated constructor stub
-//
-//       StatusListener listener = new StatusListener() {
-//           @Override
-//           public void onStatus(Status status) {
-////               System.out.println("@" + status.getUser().getScreenName() + " - " + status.getText());
-////               System.out.println(" user location:"+status.getUser().getLocation());
-////               System.out.println(" Geo location:"+status.getGeoLocation());
-//
-//               if(status.getGeoLocation() != null){
-//                  System.out.println("Has Geo location:"+status.getGeoLocation());
-//               	long id = status.getId();
-//                   String strId = String.valueOf(id);
-//                   String username = status.getUser().getScreenName();
-//                   String content = status.getText();
-//                   String userLocation = status.getUser().getLocation();
-//                   double geoLat = 0;
-//                   double geoLng = 0;
-//                   Date createdAt = status.getCreatedAt();
-//
-//                   if(status.getGeoLocation() != null){
-//                   	geoLat = status.getGeoLocation().getLatitude();
-//                   	geoLng = status.getGeoLocation().getLongitude();
-//                   }
-//
-//                   Tweet t = new Tweet(strId, username,content, userLocation, geoLat,geoLng, createdAt);
-//                   t.saveTweetToDynamoDB();
-//                   System.out.println("save tweet");
-//               }
-//
-//
-//               //System.exit(0);
-//
-//           }
-//
-//           @Override
-//           public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
-//              // System.out.println("Got a status deletion notice id:" + statusDeletionNotice.getStatusId());
-//           }
-//
-//           @Override
-//           public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-//               System.out.println("Got track limitation notice:" + numberOfLimitedStatuses);
-//           }
-//
-//           @Override
-//           public void onScrubGeo(long userId, long upToStatusId) {
-//               System.out.println("Got scrub_geo event userId:" + userId + " upToStatusId:" + upToStatusId);
-//           }
-//
-//           @Override
-//           public void onStallWarning(StallWarning warning) {
-//               System.out.println("Got stall warning:" + warning);
-//           }
-//
-//           @Override
-//           public void onException(Exception ex) {
-//               ex.printStackTrace();
-//           }
-//       };
-//       twitterStream.addListener(listener);
-//       twitterStream.sample();
+        super();
     }
 
 	/**
@@ -126,6 +63,8 @@ public class MainServlet extends HttpServlet {
 			scanFilter.put("category", condition3);
 		}
 		
+        // String queueUrl = SQS.getQueueUrl(new GetQueueUrlRequest(SQS_QUEUE_NAME)).getQueueUrl();
+
 		String tableName = DYNAMODB_TABLE_NAME;
 		ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
 		ScanResult scanResult = DYNAMODB.scan(scanRequest);
@@ -136,18 +75,17 @@ public class MainServlet extends HttpServlet {
 		for (int i = 0; i < size; i++) {
 			// Get latitude, longitude, content, username, created (long), category, sentiment
 			String categorydb = "no category";
+			String sentiment = "no sentiment";
 			if (scanResult.getItems().get(i).get("category") != null) {
 				categorydb = scanResult.getItems().get(i).get("category").getS();
+				sentiment = scanResult.getItems().get(i).get("sentiment").getS();
 				String lat = scanResult.getItems().get(i).get("geoLat").getN();
 				String lng = scanResult.getItems().get(i).get("geoLng").getN();
 				String content = scanResult.getItems().get(i).get("content").getS();
 				String username = scanResult.getItems().get(i).get("username").getS();
 				String created = scanResult.getItems().get(i).get("createdLong").getN();
 				String createdDate = scanResult.getItems().get(i).get("createdDate").getS();
-				String sentiment = "no sentiment";
-				if (scanResult.getItems().get(i).get("sentiment") != null) {
-				    sentiment = scanResult.getItems().get(i).get("sentiment").getS();
-				}
+				
 				// Format date.
 			    DateFormat fromFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 			    DateFormat toFormat = new SimpleDateFormat("MMM dd · k:mm z");
@@ -177,7 +115,12 @@ public class MainServlet extends HttpServlet {
 					position++;
 				}	
 				tweets.add(position, tweet);
-			}
+			} 
+			// else {
+			// Send tweet with blank category for sentimental processing
+            //    String id = scanResult.getItems().get(i).get("id").getS();
+            //    SQS.sendMessage(new SendMessageRequest(queueUrl, id));
+			// }
 			
 		}
 		
