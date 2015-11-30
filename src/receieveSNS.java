@@ -68,6 +68,8 @@ public class receieveSNS extends HttpServlet {
 				e.printStackTrace();
 			}
 	     }
+	     
+	     test="";
 		
 	}
 
