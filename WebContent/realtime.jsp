@@ -252,6 +252,9 @@
 
   <body>
   
+  trends: <span id="trends"></span>
+  <br><br>
+  
   	<div class="map-container">
 	    <div id="floating-panel">
 	      <button onclick="toggleHeatmap()">Toggle heatmap</button>
@@ -266,6 +269,13 @@
 		  <option value="sports">sports</option>
 		  <option value="arts">arts_entertainment</option>
 		  <option value="business">business</option>
+		  </select>
+		  
+		  <select id="place" onchange="requestTrends()">
+		  <option value="World">World</option>
+		  <option value="New York">New York</option>
+		  <option value="London">London</option>
+		  <option value="Tokyo">Tokyo</option>
 		  </select>
 		  		  
 	      <div> Total Tweets: <span id="Counter">0</span></div>
@@ -314,6 +324,7 @@ function loadRichMarker() {
 function initMap() {
 	
   requestData();
+  requestTrends();
   startEventListening();
   
   var mapProp = {
@@ -482,6 +493,16 @@ function requestData() {
      
    });
 }; 
+
+function requestTrends() {
+  	var e = document.getElementById("place");
+	var key = e.options[e.selectedIndex].value;
+    $.getJSON('TrendsServlet',{
+        place:key
+    },  function(data) {
+    	document.getElementById('trends').innerHTML = data;
+   });
+};
 
 function updateCounter(data) {
   document.getElementById("Counter").innerHTML = data.length;

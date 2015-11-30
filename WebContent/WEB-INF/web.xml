@@ -49,4 +49,14 @@
     <servlet-name>receieveSNS</servlet-name>
     <url-pattern>/receieveSNS</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>TrendsServlet</display-name>
+    <servlet-name>TrendsServlet</servlet-name>
+    <servlet-class>TrendsServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>TrendsServlet</servlet-name>
+    <url-pattern>/TrendsServlet</url-pattern>
+  </servlet-mapping>
 </web-app>
