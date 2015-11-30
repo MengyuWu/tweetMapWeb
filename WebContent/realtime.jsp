@@ -351,6 +351,7 @@ function startEventListening() {
     	// Avoid duplicated tweets
     	if (tweet['content'] != tweetDataJS[0]['content']) {
 	    	tweetDataJS.unshift(tweet);
+	    	updateCounter(tweetDataJS);
 	        addMarker(tweet);
 	        addToSideBar(tweet);
 	    }
