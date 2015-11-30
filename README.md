@@ -9,7 +9,7 @@ Temporary URL: [http://tweetmapweb-dev-dikb5tqspy.elasticbeanstalk.com/realtime.
 |  nb2406  | blanksblanks     | Nina Baculinao |
 |  mw2907  | MengyuWu         | Mengyu Wu      |
 
-### Project Links on GitHub:
+## Project Links on GitHub:
 
 __tweetMapWeb__: Serves near Tweet Map in near real-time. Toggle button allows user to toggle between heatmap of data intensity and clickable map markers indicating tweet sentiments.
 
