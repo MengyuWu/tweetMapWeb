@@ -392,7 +392,10 @@
 			<option value="Ho Chi Minh City"> - Ho Chi Minh City</option>
 		  </select>
 		  </div>		  
-	      <div> Total Tweets: <span id="Counter">0</span></div>
+	      <div>
+	        Total Tweets: <span id="Counter">0</span>
+	        <!-- <button onclick="moreTweets()">Get more tweets!</button> -->
+	      </div>
 	    </div>
 	
 	   	<div id="map"></div>

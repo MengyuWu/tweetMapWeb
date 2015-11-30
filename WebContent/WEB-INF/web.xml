@@ -59,4 +59,14 @@
     <servlet-name>TrendsServlet</servlet-name>
     <url-pattern>/TrendsServlet</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>TweetsServlet</display-name>
+    <servlet-name>TweetsServlet</servlet-name>
+    <servlet-class>TweetsServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>TweetsServlet</servlet-name>
+    <url-pattern>/TweetsServlet</url-pattern>
+  </servlet-mapping>
 </web-app>
