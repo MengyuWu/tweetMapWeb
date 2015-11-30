@@ -1,6 +1,6 @@
 # TweetMapWeb
 
-[!screenshot](screenshot.png)
+![screenshot](screenshot.png)
 
 ## How to run this project locally:
 1. Clone [tweetMapWeb](https://github.com/MengyuWu/tweetMapWeb) and [tweetBasic](https://github.com/MengyuWu/tweetBasic).
