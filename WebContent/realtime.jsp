@@ -252,9 +252,6 @@
 
   <body>
   
-  trends: <span id="trends"></span>
-  <br><br>
-  
   	<div class="map-container">
 	    <div id="floating-panel">
 	      <button onclick="toggleHeatmap()">Toggle heatmap</button>
@@ -503,7 +500,6 @@ function requestTrends() {
         place:key
     },  function(data) {
     	tweetTrendsJS = data;
-    	document.getElementById('trends').innerHTML = data['place'] + data['time'] + data['trends'];
     	showTrends();
    });
 };
@@ -531,9 +527,30 @@ function populateSideBar(data) {
 };
 
 function wrapLinks(content) {
+	content = wrapUrls(content);
+	content = wrapHashtags(content);
+	content = wrapMentions(content);
+	return content;
+}
+
+function wrapUrls(content) {
 	return content.replace(		
 			/(?:(https?\:\/\/[^\s]+))/g,
-			'<a target="_blank" href="$1">$1</a>');	
+			'<a target="_blank" href="$1">$1</a>'); 	
+}
+
+function wrapHashtags(content) {
+	content = content.replace(
+			/(#\S+)/g,
+			'<a target="_blank" href="https://twitter.com/search/?q=$1">$1</a>');
+	return content.replace(/q=#/g, "q=%23");
+}
+
+function wrapMentions(content) {
+	content = content.replace(
+			/(@\S+)/g,
+			'<a target="_blank" href="https://twitter.com/$1">$1</a>');
+	return content.replace(/\/@/g, "/");
 }
 
 function addMarker(tweet){
@@ -568,7 +585,7 @@ function addToSideBar(tweet) {
 function showTrends() {
   	var e = document.getElementById("place");
 	var key = e.options[e.selectedIndex].value;
-	var trendsText = wrapTags(tweetTrendsJS['trends']);
+	var trendsText = getTrendsText(tweetTrendsJS['trends']);
 	var preposition = ' '
 	if (tweetTrendsJS['place'] != 'Worldwide') {
 		preposition = ' in '
@@ -583,18 +600,24 @@ function showTrends() {
      );
 };
 
-function wrapTags(trends) {
+function getTrendsText(trends) {
 	var tags = trends.split(",");
 	var text = '';
 	for (i = 0; i < tags.length; i++) {
 		if (tags[i] != '') {
-			queryUrl = 'https://twitter.com/search/?q='
-			// Replace hashtags with %23 and spaces with %20		
-			queryUrl += tags[i].replace(/#/g,'%23');
-			queryUrl = queryUrl.replace(/ /g, '%20');
-			text += '<a target="_blank" href="' + queryUrl + '">' + tags[i] + '</a><br>';
+			text += wrapTag(tags[i]) + '<br>';
 		}
 	}
+	return text;
+}
+
+function wrapTag(content) {
+	var text = ''
+	url = 'https://twitter.com/search/?q='
+	// Replace hashtags with %23 and spaces with %20
+	url += content.replace(/#/g,'%23');
+	url = url.replace(/ /g, '%20');
+	text += '<a target="_blank" href="' + url + '">' + content + '</a>';
 	return text;
 }
 
