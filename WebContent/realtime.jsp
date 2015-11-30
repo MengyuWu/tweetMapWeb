@@ -86,13 +86,13 @@
 		border-radius: 150px;
      }
       .side-bar-container {
-          position: fixed;
-          right: 0;
-          top: 0;
-          width: 20%;
-          height: 100%;
-          overflow: auto;
-          background: #fff;
+         position: fixed;
+         right: 0;
+         top: 0;
+         width: 20%;
+         height: 100%;
+         overflow: auto;
+         background: #fff;
       }
       .side-bar-container.active {
       	right: -18%;
@@ -375,7 +375,7 @@ function getPointsMap(){
               content: '<div class="tweet-point" data-user="' + tweetDataJS[i]['username'] +
               '" data-content="' + tweetDataJS[i]['content'].replace('"', '\"') +
               '" data-created="' + tweetDataJS[i]['createdstr'] + 
-              '" data-geoloc="' + 'at (' + Math.round(tweetDataJS[i]['lat']) + ', ' + Math.round(tweetDataJS[i]['lng']) + ')' +
+              '" data-geoloc="' + '(' + Math.round(tweetDataJS[i]['lat']) + ', ' + Math.round(tweetDataJS[i]['lng']) + ')' +
               '" data-sentiment="' + tweetDataJS[i]['sentiment'] + 
               '" data-category="' + tweetDataJS[i]['category'] + 
               '" style="background:' + color + '"></div>'
@@ -515,7 +515,7 @@ function populateSideBar(data) {
 	  var parsedContent = wrapLinks(tweet['content']);
       $('.side-bar').append(
     	'<div class="user-tweet">' +
-	    	'<div class="user-created">' + tweet['createdstr'] + ' · at (' + Math.round(tweet['lat']) + ', ' +  Math.round(tweet['lng']) + ') </div>' +
+	    	'<div class="user-created">' + tweet['createdstr'] + ' · (' + Math.round(tweet['lat']) + ', ' +  Math.round(tweet['lng']) + ') </div>' +
 	    	'<div class="user-name">' + tweet['username'] + '</div>' +
         	'<div class="user-content">' + parsedContent + '</div>' +
         	'<div class="user-sentiment ' + tweet['sentiment'] + '">' + tweet['sentiment'] +
@@ -550,7 +550,7 @@ function addMarker(tweet){
 function addToSideBar(tweet) {
   var parsedContent = wrapLinks(tweet['content']);
      $('.side-bar').prepend(
-   	'<div class="user-tweet">' +
+   	 '<div class="user-tweet">' +
     	'<div class="user-created">' + tweet['createdstr'] +  '</div>' +
        	'<div class="user-created"> (' + tweet['lat'] + ', ' +  tweet['lng'] + ') </div>' +
     	'<div class="user-name">' + tweet['username'] + '</div>' +
