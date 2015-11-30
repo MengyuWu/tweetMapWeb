@@ -1,6 +1,25 @@
 # TweetMapWeb
 
 ![screenshot](screenshot.png)
+Temporary URL: [http://tweetmapweb-dev-dikb5tqspy.elasticbeanstalk.com/realtime.jsp](http://tweetmapweb-dev-dikb5tqspy.elasticbeanstalk.com/realtime.jsp)
+
+## Creators :octocat: :dancers:
+| UNI      | Github Username  | Full Name      |
+|---------:|------------------|----------------|
+|  nb2406  | blanksblanks     | Nina Baculinao |
+|  mw2907  | MengyuWu         | Mengyu Wu      |
+
+### Project Links on GitHub:
+
+__tweetMapWeb__: Serves near Tweet Map in near real-time. Toggle button allows user to toggle between heatmap of data intensity and clickable map markers indicating tweet sentiments.
+
+https://github.com/MengyuWu/tweetMapWeb
+
+__tweetBasic__: Sets up DynamoDB and collects tweets.
+
+https://github.com/MengyuWu/tweetBasic
+
+_Note on deployment_: We deployed the app to Elastic Beanstalk and configured Elastic LoadBalancing using AWS Toolkit on Eclipse IDE. We also deployed the app through EB CLI.
 
 ## How to run this project locally:
 1. Clone [tweetMapWeb](https://github.com/MengyuWu/tweetMapWeb) and [tweetBasic](https://github.com/MengyuWu/tweetBasic).
@@ -31,7 +50,8 @@
 12. Run tweetBasic / `GetTweet.java` as a Java application to get tweets from the Twitter Stream API. Let it run for a while to get more Twitter data. The tweets will be saved to DynamoDB and sent to SQS for further processing.
 13. Run tweetBasic / `Worker.java` as a Java application so the worker pool can begin running analyzing the sentiment and categories of the unprocessed tweets in the SQS queue. Note that Alchemy API only allows 1,000 requests per day, and we do not store tweets that are missing geolocation details or are written in unsupported languages by Alchemy API.
 13. Run tweetMapWeb / `realtime.jsp` and right click Run as / Run on server. Define a new Tomcat 7 web server if necessary.
-14. Now you should be able to visit the EBS link on your browser too. Note that to have streaming tweets come in, `GetTweet` and `Worker` must both be running locally. Enjoy!
+14. Now you should be able to see your Twitter data locally on your browser! Feel free to press the buttons to change the visualization, or use the drop down menu to see specific categories or find out what is trending in different countries and cities.
+15. Note that to have streaming tweets come in and "realtime" live up to its name, `GetTweet` and `Worker` must both be running locally, and your app must be deployed via EBS on a HTTP endpoint in order to receive SNS notifications. Follow the instructions below to deploy on EBS. When that's all done, sit back and enjoy!
 
 ## How to deploy to Elastic Beanstalk and use Elastic LoadBalancing
 ### Using AWS Toolkit in Eclipse
