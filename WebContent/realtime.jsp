@@ -272,7 +272,7 @@
 		  </select>
 		  
 		  <select id="place" onchange="requestTrends()">
-		  <option value="World">World</option>
+		  <option value="Worldwide">Worldwide</option>
 		  <option value="New York">New York</option>
 		  <option value="London">London</option>
 		  <option value="Tokyo">Tokyo</option>
